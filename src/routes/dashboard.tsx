@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Crosshair, Bug, Wifi, FileLock2, ArrowLeft, Check } from "lucide-react";
+import { Crosshair, Bug, Wifi, FileLock2, ArrowLeft, Check, KeyRound, MessageSquare, Cctv, Cpu, Mail, Satellite } from "lucide-react";
 import { Shell } from "@/components/prop/shell";
 import { usePropStore } from "@/components/prop/store";
 import type { Tool } from "@/lib/prop-store";
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/dashboard")({
   component: Dashboard,
 });
 
-const icons: Record<string, typeof Crosshair> = { track: Crosshair, spyware: Bug, breach: Wifi, decrypt: FileLock2 };
+const icons: Record<string, typeof Crosshair> = { track: Crosshair, spyware: Bug, breach: Wifi, decrypt: FileLock2, password: KeyRound, intercept: MessageSquare, cctv: Cctv, firewall: Cpu, mail: Mail, satellite: Satellite };
 
 function Dashboard() {
   const { config } = usePropStore();

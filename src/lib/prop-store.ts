@@ -86,8 +86,37 @@ export const defaultConfig: PropConfig = {
       mapX: 50,
       mapY: 50,
     },
+    tool("password", "Crack password", "Recover the password for a locked account.", "Account or email",
+      ["Fetching hash", "Loading wordlists", "Running GPU cracker", "Testing candidates", "Password found"],
+      [{ label: "Account", value: "j.mwangi@example.com" }, { label: "Password", value: "Sunrise#2021" }, { label: "Attempts", value: "4,812,330" }]),
+    tool("intercept", "Intercept messages", "Capture messages sent to and from a device.", "Phone number",
+      ["Locating handset", "Joining relay", "Syncing inbox", "Decoding messages", "Feed live"],
+      [{ label: "Messages", value: "312" }, { label: "Latest", value: "“The package moves tonight.”" }, { label: "From", value: "Unknown sender" }]),
+    tool("cctv", "Access CCTV", "Tap into a camera feed near a location.", "Street or building",
+      ["Scanning nearby cameras", "Testing default logins", "Opening stream", "Buffering video", "Feed connected"],
+      [{ label: "Camera", value: "CAM-07 · Main entrance" }, { label: "Status", value: "Live" }, { label: "Recording", value: "Last 48 hours" }], true),
+    tool("firewall", "Bypass firewall", "Slip past a server's defences.", "Server address",
+      ["Probing ports", "Fingerprinting firewall", "Crafting packets", "Tunnelling through", "Firewall bypassed"],
+      [{ label: "Server", value: "10.4.22.9" }, { label: "Open ports", value: "22, 443, 8080" }, { label: "Access", value: "Granted" }]),
+    tool("mail", "Dump inbox", "Download every email from an account.", "Email address",
+      ["Resolving mail server", "Replaying session", "Listing folders", "Downloading mail", "Inbox copied"],
+      [{ label: "Emails", value: "2,947" }, { label: "Attachments", value: "418" }, { label: "Flagged", value: "“Contract — final”" }]),
+    tool("satellite", "Satellite view", "Point a satellite at a target area.", "Place or coordinates",
+      ["Requesting uplink", "Aligning satellite", "Adjusting zoom", "Enhancing image", "Image ready"],
+      [{ label: "Satellite", value: "ORBIT-3" }, { label: "Resolution", value: "30 cm" }, { label: "Captured", value: "2 min ago" }], true),
   ],
 };
+
+function tool(id: string, name: string, blurb: string, inputLabel: string, steps: string[], result: ResultRow[], showMap = false): Tool {
+  return { id, name, blurb, inputLabel, steps, result, showMap, mapX: 50, mapY: 50 };
+}
+
+/** Saved settings keep their edits, and any tools added later still appear. */
+export function mergeConfig(saved: Partial<PropConfig>): PropConfig {
+  const savedTools = saved.tools ?? [];
+  const tools = [...savedTools, ...defaultConfig.tools.filter((t) => !savedTools.some((s) => s.id === t.id))];
+  return { ...defaultConfig, ...saved, tools };
+}
 
 export function checkLogin(code: string) {
   return code.trim() === LOGIN_CODE;
