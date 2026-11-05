@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Shell } from "@/components/prop/shell";
 import { usePropStore } from "@/components/prop/store";
+import { ScenarioPanel } from "@/components/prop/scenario-panel";
 import { checkPin, parseRows, rowsToText, type Tool } from "@/lib/prop-store";
 
 export const Route = createFileRoute("/admin")({
@@ -34,8 +35,21 @@ function Admin() {
           {error && <p className="error">Wrong PIN.</p>}
           <button className="btn primary full" disabled={!pin}>Unlock</button>
         </form>
-      ) : <Settings />}
+      ) : <AdminTabs />}
     </Shell>
+  );
+}
+
+function AdminTabs() {
+  const [tab, setTab] = useState<"settings" | "scenario">("settings");
+  return (
+    <>
+      <div className="tabs admin-tabs">
+        <button className={tab === "settings" ? "active" : ""} onClick={() => setTab("settings")}>Settings</button>
+        <button className={tab === "scenario" ? "active" : ""} onClick={() => setTab("scenario")}>Scenario simulator</button>
+      </div>
+      {tab === "settings" ? <Settings /> : <ScenarioPanel />}
+    </>
   );
 }
 
