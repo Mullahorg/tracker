@@ -68,7 +68,7 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
       setStep(s);
       if (tick % 3 === 0) {
         const hex = Array.from({ length: 4 }, () => Math.floor(Math.random() * 65535).toString(16).padStart(4, "0")).join(" ");
-        setLog((l) => [...l.slice(-40), `[${tool.steps[s].toLowerCase()}] 0x${hex}`]);
+        setLog((l) => [...l.slice(-40), `[${(tool.steps[s] ?? "").toLowerCase()}] 0x${hex}`]);
       }
       if (tick >= total) {
         clearInterval(t);

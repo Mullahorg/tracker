@@ -41,14 +41,14 @@ function Admin() {
 
 function Settings() {
   const { config, update, reset } = usePropStore();
-  const [toolId, setToolId] = useState(config.tools[0].id);
-  const tool = config.tools.find((t) => t.id === toolId) ?? config.tools[0];
+  const [toolId, setToolId] = useState(config.tools[0]?.id ?? "");
+  const tool = (config.tools.find((t) => t.id === toolId) ?? config.tools[0])!;
 
   const setTool = (patch: Partial<Tool>) => update((c) => ({ ...c, tools: c.tools.map((t) => (t.id === tool.id ? { ...t, ...patch } : t)) }));
 
   function onFavicon(file?: File) {
     if (!file) return;
-    if (file.size > 300_000) return toast.error("Please use an image under 300 KB.");
+    if (file.size > 300_000) { toast.error("Please use an image under 300 KB."); return; }
     const reader = new FileReader();
     reader.onload = () => { update((c) => ({ ...c, favicon: String(reader.result) })); toast.success("Icon updated"); };
     reader.readAsDataURL(file);
