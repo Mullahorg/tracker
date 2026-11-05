@@ -173,3 +173,58 @@ h2 { margin: 0 0 16px; font-size: 17px; font-weight: 600; }
 }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 .scenario-out { white-space: pre-wrap; color: var(--foreground); font-size: 13px; }
+
+/* ---------- hacking effects ---------- */
+.code-rain { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.hero-fx { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 32px; margin-bottom: 16px; border: 1px solid var(--border); border-radius: 16px; background: var(--terminal); }
+.hero-copy { position: relative; display: grid; gap: 8px; }
+.tag { font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; color: var(--primary); }
+.fx-row { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; margin-bottom: 24px; }
+.fx-stack { display: grid; gap: 16px; }
+.fx-strip { display: grid; grid-template-columns: 1fr 1fr 160px; gap: 16px; margin-bottom: 16px; }
+.fx-card { position: relative; display: grid; gap: 8px; padding: 14px; border: 1px solid var(--border); border-radius: 14px; background: var(--terminal); min-height: 120px; }
+.fx-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted-foreground); }
+
+.term-window { border: 1px solid var(--border); border-radius: 14px; background: var(--terminal); overflow: hidden; display: flex; flex-direction: column; min-height: 300px; }
+.term-bar { display: flex; align-items: center; gap: 6px; padding: 10px 14px; border-bottom: 1px solid var(--border); font-family: var(--font-mono); font-size: 11px; color: var(--muted-foreground); }
+.term-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
+.term-bar i:first-child { background: var(--destructive); } .term-bar i:nth-child(2) { background: var(--alert); } .term-bar i:nth-child(3) { background: var(--primary); }
+.term-bar span { margin-left: 8px; }
+.term-body { flex: 1; padding: 14px; font-family: var(--font-mono); font-size: 12px; line-height: 1.7; color: var(--muted-foreground); overflow: hidden; }
+.term-body .cmd { color: var(--primary); }
+.term-body .warn { color: var(--alert); }
+.caret { display: inline-block; width: 8px; height: 14px; background: var(--primary); animation: blink 1s steps(1) infinite; vertical-align: middle; }
+@keyframes blink { 50% { opacity: 0; } }
+
+.radar { position: relative; flex: none; width: 150px; aspect-ratio: 1; border-radius: 50%; border: 1px solid color-mix(in oklab, var(--primary) 50%, transparent); background: repeating-radial-gradient(circle, transparent 0 24px, color-mix(in oklab, var(--primary) 18%, transparent) 24px 25px); overflow: hidden; }
+.radar-sweep { position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 0deg, color-mix(in oklab, var(--primary) 55%, transparent), transparent 70deg); animation: spin 3s linear infinite; }
+.blip { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 8px var(--primary); animation: blipfade 3s infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes blipfade { 0%, 100% { opacity: .1; } 20% { opacity: 1; } }
+.radar-sm { place-items: center; } .radar-sm .radar { width: 110px; }
+
+.hex-stream { font-family: var(--font-mono); font-size: 11px; line-height: 1.6; color: var(--primary); opacity: .85; }
+.meters { display: flex; align-items: flex-end; gap: 4px; height: 70px; }
+.meters span { flex: 1; border-radius: 3px 3px 0 0; background: linear-gradient(to top, var(--primary), color-mix(in oklab, var(--primary) 20%, transparent)); transition: height .3s; }
+.netgraph { width: 100%; height: 90px; }
+.netgraph line { stroke: var(--primary); stroke-width: .5; stroke-dasharray: 3 3; opacity: .6; animation: dash 1.5s linear infinite; vector-effect: non-scaling-stroke; }
+.netgraph circle { fill: var(--muted-foreground); }
+.netgraph circle.target { fill: var(--destructive); animation: blipfade 1.2s infinite; }
+@keyframes dash { to { stroke-dashoffset: -12; } }
+
+.glitch { position: relative; display: inline-block; }
+.glitch::before, .glitch::after { content: attr(data-text); position: absolute; inset: 0; overflow: hidden; }
+.glitch::before { color: var(--destructive); animation: glitch 2.6s infinite steps(1); clip-path: inset(0 0 60% 0); }
+.glitch::after { color: var(--primary); animation: glitch 3.1s infinite steps(1) reverse; clip-path: inset(55% 0 0 0); }
+@keyframes glitch { 0%, 88%, 100% { transform: none; opacity: 0; } 90% { transform: translate(-2px, 1px); opacity: .8; } 94% { transform: translate(2px, -1px); opacity: .8; } }
+
+.granted-wrap { position: relative; }
+.granted { grid-column: 1 / -1; padding: 14px; text-align: center; border: 1px solid var(--primary); border-radius: 12px; font-family: var(--font-mono); font-size: 20px; font-weight: 700; letter-spacing: .3em; color: var(--primary); background: color-mix(in oklab, var(--primary) 10%, transparent); animation: flash .5s 3; }
+@keyframes flash { 50% { opacity: .3; } }
+.admin-tabs { margin-bottom: 20px; }
+
+@media (max-width: 760px) {
+  .fx-row, .fx-strip { grid-template-columns: 1fr; }
+  .hero-fx .radar { display: none; }
+  .topbar { gap: 12px; padding: 0 14px; }
+}

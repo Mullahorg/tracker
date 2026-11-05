@@ -108,6 +108,12 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
       )}
 
       {phase === "running" && (
+        <>
+        <div className="fx-strip">
+          <div className="fx-card"><span className="fx-label">Packet capture</span><HexStream rows={6} /></div>
+          <div className="fx-card"><span className="fx-label">Route to target</span><NetGraph /></div>
+          <div className="fx-card radar-sm"><Radar /></div>
+        </div>
         <div className="run-grid">
           <div className="card">
             <div className="row-between"><span className="muted">Target</span><b>{target}</b></div>
@@ -126,10 +132,12 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
             <span className="caret" />
           </div>
         </div>
+        </>
       )}
 
       {phase === "done" && (
-        <div className="run-grid">
+        <div className="run-grid granted-wrap">
+          <div className="granted"><Glitch text="ACCESS GRANTED" /></div>
           <div className="card">
             <div className="success"><Check size={16} /> {tool.steps[tool.steps.length - 1]}</div>
             <div className="row-between"><span className="muted">Target</span><b>{target}</b></div>
