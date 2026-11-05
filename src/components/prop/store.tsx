@@ -33,7 +33,7 @@ export function PropStoreProvider({ children }: { children: ReactNode }) {
       document.head.appendChild(link);
     }
     link.removeAttribute("type");
-    link.href = config.favicon ?? "/favicon.ico";
+    link.href = config.favicon ?? "/favicon.png";
   }, [config, ready]);
 
   const update = useCallback((fn: (c: PropConfig) => PropConfig) => setConfig((c) => fn(c)), []);

@@ -25,7 +25,7 @@ export function Shell({ children }: { children: ReactNode }) {
     <div className="shell">
       <header className="topbar">
         <Link to="/dashboard" className="brand">
-          {config.favicon ? <img src={config.favicon} alt="" /> : <span className="brand-dot" />}
+          {config.favicon ? <img src={config.favicon} alt="" /> : <img src="/logo.png" alt="" />}
           {config.appName}
         </Link>
         <nav>
