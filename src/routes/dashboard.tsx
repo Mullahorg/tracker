@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Activity, ArrowUpRight, Bell, Check, ChevronDown, CircleDot, Clock3, FileLock2, FileText, MapPin, MessageSquare, MoreHorizontal, Radio, Send, Shield, Signal, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,15 @@ function DashboardPage() {
   const [declassified, setDeclassified] = useState(false);
   const [decrypting, setDecrypting] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(true);
+
+  useEffect(() => {
+    const onLayout = (event: Event) => {
+      const mode = (event as CustomEvent<string>).detail;
+      if (mode === "OPS GRID" || mode === "WALLBOARD") setLayout(mode);
+    };
+    window.addEventListener("aegis-layout", onLayout);
+    return () => window.removeEventListener("aegis-layout", onLayout);
+  }, []);
 
   const missions = useMemo(() => data.missions.filter((mission) => `${mission.codename} ${mission.objective} ${mission.id}`.toLowerCase().includes(search)), [data.missions, search]);
   const events = useMemo(() => data.events.filter((event) => `${event.title} ${event.detail}`.toLowerCase().includes(search)).slice(0, 6), [data.events, search]);
@@ -93,7 +102,7 @@ function DashboardPage() {
       </Panel>
 
       <Panel className="asset-panel" title="Fictional assets" tag="TOPOLOGY / LOCAL" icon={<Radio size={15} />}>
-        <div className="asset-topology"><svg viewBox="0 0 400 116" role="img" aria-label="Fictional topology diagram linking three prop assets"><path d="M64 58H200M200 58h135M200 58V18" className="topology-link"/><circle cx="64" cy="58" r="6"/><circle cx="200" cy="58" r="7"/><circle cx="335" cy="58" r="6"/><circle cx="200" cy="18" r="5"/><text x="64" y="91">KITE-04</text><text x="200" y="91">RELAY-12</text><text x="335" y="91">COURIER-02</text><text x="200" y="8">ARCHIVE</text></svg></div>
+        <div className="asset-topology"><svg viewBox="0 0 400 116" role="img" aria-label="Fictional topology diagram linking prop assets"><path d="M64 58H200M200 58h135M200 58V18" className="topology-link"/><circle cx="64" cy="58" r="6"/><circle cx="200" cy="58" r="7"/><circle cx="335" cy="58" r="6"/><circle cx="200" cy="18" r="5"/><text x="64" y="91">{data.assets[0]?.name ?? "NODE-01"}</text><text x="200" y="91">{data.assets[1]?.name ?? "NODE-02"}</text><text x="335" y="91">{data.assets[2]?.name ?? "NODE-03"}</text><text x="200" y="8">ARCHIVE</text></svg></div>
         <div className="asset-list">{data.assets.map((asset) => <div key={asset.id}><span><i />{asset.name}</span><small>{asset.type}</small><b>{asset.status}</b></div>)}</div>
       </Panel>
 
@@ -103,6 +112,6 @@ function DashboardPage() {
     </div>
     <div className="dashboard-disclaimer"><Shield size={13} /> SIMULATION ONLY <span>Every signal, location, operator, and metric is fabricated and stored on this device.</span></div>
 
-    {docOpen && <div className="modal-backdrop" role="presentation" onClick={() => setDocOpen(false)}><section className="document-modal" role="dialog" aria-modal="true" aria-labelledby="document-title" onClick={(event) => event.stopPropagation()}><div className="modal-heading"><div><span className="eyebrow">AEGIS X / DOCUMENT VIEWER</span><h2 id="document-title">BRIEF-1142</h2></div><Button variant="ghost" size="icon" aria-label="Close document" onClick={() => setDocOpen(false)}><X /></Button></div><ClassificationStrip>CLASSIFIED — LEVEL 4 · FICTIONAL</ClassificationStrip>{decrypting ? <div className="decrypt-state"><div className="decrypt-track"><span /></div><b>DECRYPTING…</b><small>LOCAL PROP DOCUMENT · NO NETWORK ACCESS</small></div> : <div className="brief-document"><div className="brief-document-meta"><span>SUBJECT / ECHO LEDGER</span><span>REVISION 03 · 09:38 UTC</span></div><h3 id="document-title">Operation Nightglass</h3><p>{data.briefs.find((brief) => brief.id === "BRIEF-1142")?.text}</p><p>Review window is open for the assigned operators. Any variation in this file is staged narrative content and has no external source.</p><div className="redaction-blocks"><span>DESIGN NOTE / INTERNAL PROP COPY</span>{declassified ? <p>Scenario ref: GLASS HARBOR · all identifiers are invented. Release is for in-scene display only.</p> : <><i /><i /><i /></>}</div><div className="document-signature"><span>PREPARED BY <b>analyst_09</b></span><span>AUTHORIZATION <b>PROP-LEVEL-04</b></span></div></div>}<div className="document-modal-footer"><Button variant="outline" onClick={() => setDeclassified((value) => !value)} disabled={decrypting}>{declassified ? "RESTORE REDACTIONS" : "DECLASSIFY VIEW"}</Button><span>FICTIONAL DOCUMENT · FOR SCREEN USE</span></div></section></div>}
+    {docOpen && <div className="modal-backdrop" role="presentation" onClick={() => setDocOpen(false)}><section className="document-modal" role="dialog" aria-modal="true" aria-labelledby="document-title" tabIndex={-1} onClick={(event) => event.stopPropagation()} onKeyDown={(event) => { if (event.key === "Escape") setDocOpen(false); }}><div className="modal-heading"><div><span className="eyebrow">AEGIS X / DOCUMENT VIEWER</span><h2 id="document-title">BRIEF-1142</h2></div><Button variant="ghost" size="icon" aria-label="Close document" onClick={() => setDocOpen(false)}><X /></Button></div><ClassificationStrip>CLASSIFIED — LEVEL 4 · FICTIONAL</ClassificationStrip>{decrypting ? <div className="decrypt-state"><div className="decrypt-track"><span /></div><b>DECRYPTING…</b><small>LOCAL PROP DOCUMENT · NO NETWORK ACCESS</small></div> : <div className="brief-document"><div className="brief-document-meta"><span>SUBJECT / ECHO LEDGER</span><span>REVISION 03 · 09:38 UTC</span></div><h3>Operation Nightglass</h3><p>{data.briefs.find((brief) => brief.id === "BRIEF-1142")?.text}</p><p>Review window is open for the assigned operators. Any variation in this file is staged narrative content and has no external source.</p><div className="redaction-blocks"><span>DESIGN NOTE / INTERNAL PROP COPY</span>{declassified ? <p>Scenario ref: GLASS HARBOR · all identifiers are invented. Release is for in-scene display only.</p> : <><i /><i /><i /></>}</div><div className="document-signature"><span>PREPARED BY <b>analyst_09</b></span><span>AUTHORIZATION <b>PROP-LEVEL-04</b></span></div></div>}<div className="document-modal-footer"><Button variant="outline" onClick={() => setDeclassified((value) => !value)} disabled={decrypting}>{declassified ? "RESTORE REDACTIONS" : "DECLASSIFY VIEW"}</Button><span>FICTIONAL DOCUMENT · FOR SCREEN USE</span></div></section></div>}
   </div></AegisShell>;
 }
