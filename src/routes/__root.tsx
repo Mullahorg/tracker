@@ -12,7 +12,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { AegisProvider } from "@/components/aegis/aegis-provider";
+import { PropStoreProvider } from "@/components/prop/store";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -80,19 +80,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "AEGIS X · Fictional Interface" },
-      { name: "description", content: "A fictional command interface created as a motion picture prop." },
-      { name: "author", content: "AEGIS X Fictional Prop" },
-      { property: "og:title", content: "AEGIS X · Fictional Interface" },
-      { property: "og:description", content: "A fictional command interface created as a motion picture prop." },
+      { title: "Sentinel" },
+      { name: "description", content: "Sentinel console." },
+      { name: "author", content: "Sentinel" },
+      { property: "og:title", content: "Sentinel" },
+      { property: "og:description", content: "Sentinel console." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" },
       {
         rel: "stylesheet",
         href: appCss,
@@ -125,11 +124,11 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AegisProvider>
+      <PropStoreProvider>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <Toaster position="bottom-right" />
-      </AegisProvider>
+      </PropStoreProvider>
     </QueryClientProvider>
   );
 }
