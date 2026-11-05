@@ -1,0 +1,151 @@
+import { useEffect, useRef, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { Crosshair, Bug, Wifi, FileLock2, ArrowLeft, Check } from "lucide-react";
+import { Shell } from "@/components/prop/shell";
+import { usePropStore } from "@/components/prop/store";
+import type { Tool } from "@/lib/prop-store";
+
+export const Route = createFileRoute("/dashboard")({
+  head: () => ({
+    meta: [
+      { title: "Tools · Sentinel" },
+      { name: "description", content: "Sentinel console tools: tracking, implant, breach and decrypt screens." },
+      { property: "og:title", content: "Tools · Sentinel" },
+      { property: "og:description", content: "Sentinel console tools." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: Dashboard,
+});
+
+const icons: Record<string, typeof Crosshair> = { track: Crosshair, spyware: Bug, breach: Wifi, decrypt: FileLock2 };
+
+function Dashboard() {
+  const { config } = usePropStore();
+  const [active, setActive] = useState<Tool | null>(null);
+
+  if (active) return <Shell><Runner tool={active} onBack={() => setActive(null)} /></Shell>;
+
+  return (
+    <Shell>
+      <div className="page-head">
+        <h1>Tools</h1>
+        <p className="muted">Choose an operation to start.</p>
+      </div>
+      <div className="tool-grid">
+        {config.tools.map((tool) => {
+          const Icon = icons[tool.id] ?? Crosshair;
+          return (
+            <button key={tool.id} className="tool-card" onClick={() => setActive(tool)}>
+              <span className="tool-icon"><Icon size={20} /></span>
+              <strong>{tool.name}</strong>
+              <span className="muted">{tool.blurb}</span>
+            </button>
+          );
+        })}
+      </div>
+    </Shell>
+  );
+}
+
+function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
+  const [target, setTarget] = useState("");
+  const [phase, setPhase] = useState<"input" | "running" | "done">("input");
+  const [step, setStep] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const [log, setLog] = useState<string[]>([]);
+  const logRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (phase !== "running") return;
+    const total = tool.steps.length * 22;
+    let tick = 0;
+    const t = setInterval(() => {
+      tick++;
+      setProgress(Math.min(100, Math.round((tick / total) * 100)));
+      const s = Math.min(tool.steps.length - 1, Math.floor(tick / 22));
+      setStep(s);
+      if (tick % 3 === 0) {
+        const hex = Array.from({ length: 4 }, () => Math.floor(Math.random() * 65535).toString(16).padStart(4, "0")).join(" ");
+        setLog((l) => [...l.slice(-40), `[${tool.steps[s].toLowerCase()}] 0x${hex}`]);
+      }
+      if (tick >= total) {
+        clearInterval(t);
+        setTimeout(() => setPhase("done"), 400);
+      }
+    }, 70);
+    return () => clearInterval(t);
+  }, [phase, tool.steps]);
+
+  useEffect(() => {
+    logRef.current?.scrollTo({ top: logRef.current.scrollHeight });
+  }, [log]);
+
+  return (
+    <div className="runner">
+      <button className="btn ghost" onClick={onBack}><ArrowLeft size={16} /> All tools</button>
+      <div className="page-head"><h1>{tool.name}</h1><p className="muted">{tool.blurb}</p></div>
+
+      {phase === "input" && (
+        <form className="card narrow" onSubmit={(e) => { e.preventDefault(); setPhase("running"); }}>
+          <label className="field"><span>{tool.inputLabel}</span><input autoFocus value={target} onChange={(e) => setTarget(e.target.value)} /></label>
+          <button className="btn primary" disabled={!target.trim()}>Start</button>
+        </form>
+      )}
+
+      {phase === "running" && (
+        <div className="run-grid">
+          <div className="card">
+            <div className="row-between"><span className="muted">Target</span><b>{target}</b></div>
+            <div className="bar"><span style={{ width: `${progress}%` }} /></div>
+            <div className="row-between small"><span>{tool.steps[step]}…</span><span>{progress}%</span></div>
+            <ol className="steps">
+              {tool.steps.map((s, i) => (
+                <li key={s + i} className={i < step ? "done" : i === step ? "now" : ""}>
+                  <span className="step-dot">{i < step ? <Check size={11} /> : i + 1}</span>{s}
+                </li>
+              ))}
+            </ol>
+          </div>
+          <div className="terminal" ref={logRef}>
+            {log.map((l, i) => <div key={i}>{l}</div>)}
+            <span className="caret" />
+          </div>
+        </div>
+      )}
+
+      {phase === "done" && (
+        <div className="run-grid">
+          <div className="card">
+            <div className="success"><Check size={16} /> {tool.steps[tool.steps.length - 1]}</div>
+            <div className="row-between"><span className="muted">Target</span><b>{target}</b></div>
+            <dl className="result">
+              {tool.result.map((r, i) => <div key={i}><dt>{r.label}</dt><dd>{r.value}</dd></div>)}
+            </dl>
+            <button className="btn" onClick={() => { setPhase("input"); setLog([]); setProgress(0); setStep(0); }}>Run again</button>
+          </div>
+          {tool.showMap ? <FakeMap x={tool.mapX} y={tool.mapY} /> : (
+            <div className="terminal">{log.slice(-18).map((l, i) => <div key={i}>{l}</div>)}<div className="ok">// operation complete</div></div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FakeMap({ x, y }: { x: number; y: number }) {
+  return (
+    <div className="map">
+      <svg viewBox="0 0 100 70" preserveAspectRatio="none" aria-hidden="true">
+        {[10, 22, 35, 48, 60].map((v) => <line key={"h" + v} x1="0" x2="100" y1={v} y2={v} />)}
+        {[12, 28, 44, 61, 77, 90].map((v) => <line key={"v" + v} y1="0" y2="70" x1={v} x2={v} />)}
+        <path className="road" d="M0 40 C25 35 40 50 60 32 S85 20 100 26" />
+        <path className="road" d="M30 0 C34 20 50 40 45 70" />
+        <rect className="block" x="64" y="40" width="14" height="10" />
+        <rect className="block" x="14" y="12" width="10" height="8" />
+      </svg>
+      <span className="pin" style={{ left: `${x}%`, top: `${y}%` }}><span /></span>
+    </div>
+  );
+}
