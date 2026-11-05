@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { useAegis } from "@/components/aegis/aegis-provider";
 import { AegisShell, ClassificationStrip, PageHeading, Panel, SeverityPill } from "@/components/aegis/aegis-ui";
-import { type Severity } from "@/lib/aegis-data";
+import { type MissionStatus, type Severity } from "@/lib/aegis-data";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin")({
@@ -23,7 +23,7 @@ function AdminPage() {
   const [authorized, setAuthorized] = useState(false);
   const [pin, setPin] = useState("");
   const [tab, setTab] = useState("MISSIONS");
-  const [missionDraft, setMissionDraft] = useState({ codename: "", objective: "", priority: "ROUTINE" as Severity, status: "ACTIVE" as const, progress: 0, eta: "01:00" });
+  const [missionDraft, setMissionDraft] = useState({ codename: "", objective: "", priority: "ROUTINE" as Severity, status: "ACTIVE" as MissionStatus, progress: 0, eta: "01:00" });
   const [locationDraft, setLocationDraft] = useState({ name: "", region: "", x: 50, y: 50, activity: 50, status: "NOMINAL" as "NOMINAL" | "ELEVATED" | "QUIET" });
   const [eventDraft, setEventDraft] = useState({ title: "", detail: "", severity: "ROUTINE" as Severity });
   const [alertDraft, setAlertDraft] = useState({ message: "", severity: "ELEVATED" as Severity });
@@ -43,7 +43,7 @@ function AdminPage() {
   function saveMission(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!missionDraft.codename.trim() || !missionDraft.objective.trim()) return;
-    const mission = { id: `M-${Math.floor(220 + Math.random() * 700)}`, codename: missionDraft.codename.trim().toUpperCase(), objective: missionDraft.objective.trim(), priority: missionDraft.priority, status: missionDraft.status, progress: missionDraft.progress, eta: missionDraft.eta.trim() || "01:00", operators: ["A9", "Q8"], locationId: data.locations[0]?.id ?? "", objectives: [{ id: "a", label: "Review the fictional scenario packet", done: false }, { id: "b", label: "Annotate the staged sample", done: false }, { id: "c", label: "Prepare a closing prop note", done: false }] };
+    const mission = { id: `M-${Date.now()}`, codename: missionDraft.codename.trim().toUpperCase(), objective: missionDraft.objective.trim(), priority: missionDraft.priority, status: missionDraft.status, progress: missionDraft.progress, eta: missionDraft.eta.trim() || "01:00", operators: ["A9", "Q8"], locationId: data.locations[0]?.id ?? "", objectives: [{ id: "a", label: "Review the fictional scenario packet", done: false }, { id: "b", label: "Annotate the staged sample", done: false }, { id: "c", label: "Prepare a closing prop note", done: false }] };
     updateData((current) => ({ ...current, missions: [mission, ...current.missions] }));
     setMissionDraft({ codename: "", objective: "", priority: "ROUTINE", status: "ACTIVE", progress: 0, eta: "01:00" });
     toast.success("Fictional scenario saved locally");

@@ -38,7 +38,14 @@ export function AegisShell({ children }: { children: ReactNode }) {
         document.getElementById("global-search")?.focus();
       }
       if (event.key === "Escape") setHelpOpen(false);
-      if (event.key.toLowerCase() === "g" && !(event.target instanceof HTMLInputElement)) navigate({ to: "/dashboard" });
+      if (event.key.toLowerCase() === "g" && !(event.target instanceof HTMLInputElement)) {
+        navigate({ to: "/dashboard" });
+        window.setTimeout(() => window.dispatchEvent(new CustomEvent("aegis-layout", { detail: "OPS GRID" })), 0);
+      }
+      if (event.key.toLowerCase() === "w" && !(event.target instanceof HTMLInputElement)) {
+        navigate({ to: "/dashboard" });
+        window.setTimeout(() => window.dispatchEvent(new CustomEvent("aegis-layout", { detail: "WALLBOARD" })), 0);
+      }
       if (event.key === "?" && !(event.target instanceof HTMLInputElement)) setHelpOpen((open) => !open);
     };
     window.addEventListener("keydown", onKeyDown);
