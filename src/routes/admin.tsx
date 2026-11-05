@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Activity, AlertTriangle, ArrowUpRight, Check, FileText, MapPin, Plus, Save, ShieldAlert, Trash2, Users, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,14 +33,14 @@ function AdminPage() {
   const unacknowledged = data.alerts.filter((alert) => !alert.acknowledged).length;
   const navCounts = useMemo(() => ({ missions: data.missions.length, locations: data.locations.length, alerts: unacknowledged, briefs: data.briefs.length }), [data, unacknowledged]);
 
-  function enterAdmin(event: React.FormEvent<HTMLFormElement>) {
+  function enterAdmin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!pin.trim()) return;
     setAuthorized(true);
     toast.success("Prop admin panel unlocked");
   }
 
-  function saveMission(event: React.FormEvent<HTMLFormElement>) {
+  function saveMission(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!missionDraft.codename.trim() || !missionDraft.objective.trim()) return;
     const mission = { id: `M-${Math.floor(220 + Math.random() * 700)}`, codename: missionDraft.codename.trim().toUpperCase(), objective: missionDraft.objective.trim(), priority: missionDraft.priority, status: missionDraft.status, progress: missionDraft.progress, eta: missionDraft.eta.trim() || "01:00", operators: ["A9", "Q8"], locationId: data.locations[0]?.id ?? "", objectives: [{ id: "a", label: "Review the fictional scenario packet", done: false }, { id: "b", label: "Annotate the staged sample", done: false }, { id: "c", label: "Prepare a closing prop note", done: false }] };
@@ -49,7 +49,7 @@ function AdminPage() {
     toast.success("Fictional scenario saved locally");
   }
 
-  function saveLocation(event: React.FormEvent<HTMLFormElement>) {
+  function saveLocation(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!locationDraft.name.trim() || !locationDraft.region.trim()) return;
     updateData((current) => ({ ...current, locations: [...current.locations, { ...locationDraft, id: `loc-${Date.now()}`, name: locationDraft.name.trim().toUpperCase(), region: locationDraft.region.trim().toUpperCase() }] }));
@@ -57,7 +57,7 @@ function AdminPage() {
     toast.success("Fictional map label saved");
   }
 
-  function saveEvent(event: React.FormEvent<HTMLFormElement>) {
+  function saveEvent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!eventDraft.title.trim()) return;
     updateData((current) => ({ ...current, events: [{ id: `ev-${Date.now()}`, time: "JUST NOW", title: eventDraft.title.trim(), detail: eventDraft.detail.trim() || "Admin-added fictional entry", severity: eventDraft.severity }, ...current.events] }));
@@ -65,7 +65,7 @@ function AdminPage() {
     toast.success("Fictional event added");
   }
 
-  function saveAlert(event: React.FormEvent<HTMLFormElement>) {
+  function saveAlert(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!alertDraft.message.trim()) return;
     updateData((current) => ({ ...current, alerts: [{ id: `al-${Date.now()}`, message: alertDraft.message.trim(), severity: alertDraft.severity, time: "NOW", acknowledged: false }, ...current.alerts] }));
@@ -73,7 +73,7 @@ function AdminPage() {
     toast.success("Fictional alert added");
   }
 
-  function saveBrief(event: React.FormEvent<HTMLFormElement>) {
+  function saveBrief(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!briefDraft.title.trim() || !briefDraft.text.trim()) return;
     updateData((current) => ({ ...current, briefs: [{ ...briefDraft, id: `BRIEF-${Math.floor(1200 + Math.random() * 700)}`, title: briefDraft.title.trim(), text: briefDraft.text.trim() }, ...current.briefs] }));
