@@ -1,0 +1,4 @@
+- [ ] Replace the placeholder home screen with the fictional AEGIS X secure-access experience.
+- [ ] Build the dashboard, missions, admin, and printable report screens using inert fictional data only.
+- [ ] Add local persistence, responsive layouts, accessible interactions, route metadata, and persistent prop disclaimers.
+- [ ] Verify the app preview, key interactions, and project checks.
