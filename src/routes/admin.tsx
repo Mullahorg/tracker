@@ -79,7 +79,7 @@ function Settings() {
           <div className="field">
             <span>Site icon (favicon)</span>
             <div className="favicon-row">
-              <span className="favicon-preview">{config.favicon ? <img src={config.favicon} alt="Current icon" /> : <span className="brand-dot" />}</span>
+              <span className="favicon-preview">{config.favicon ? <img src={config.favicon} alt="Current icon" /> : <img src="/logo.png" alt="Default icon" />}</span>
               <label className="btn">Upload<input type="file" accept="image/*" hidden onChange={(e) => onFavicon(e.target.files?.[0])} /></label>
               {config.favicon && <button className="btn ghost" onClick={() => update((c) => ({ ...c, favicon: null }))}>Remove</button>}
             </div>
