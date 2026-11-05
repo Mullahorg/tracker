@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
-import { defaultConfig, STORAGE_KEY, type PropConfig } from "@/lib/prop-store";
+import { defaultConfig, mergeConfig, STORAGE_KEY, type PropConfig } from "@/lib/prop-store";
 
 type Ctx = { config: PropConfig; ready: boolean; update: (fn: (c: PropConfig) => PropConfig) => void; reset: () => void };
 const StoreContext = createContext<Ctx | null>(null);
@@ -11,7 +11,7 @@ export function PropStoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setConfig({ ...defaultConfig, ...(JSON.parse(saved) as Partial<PropConfig>) });
+      if (saved) setConfig(mergeConfig(JSON.parse(saved) as Partial<PropConfig>));
     } catch {
       localStorage.removeItem(STORAGE_KEY);
     }
