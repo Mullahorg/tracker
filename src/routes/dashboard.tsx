@@ -4,6 +4,7 @@ import { Crosshair, Bug, Wifi, FileLock2, ArrowLeft, Check } from "lucide-react"
 import { Shell } from "@/components/prop/shell";
 import { usePropStore } from "@/components/prop/store";
 import type { Tool } from "@/lib/prop-store";
+import { CodeRain, Glitch, HexStream, LiveTerminal, Meters, NetGraph, Radar } from "@/components/prop/fx";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -29,9 +30,21 @@ function Dashboard() {
 
   return (
     <Shell>
-      <div className="page-head">
-        <h1>Tools</h1>
-        <p className="muted">Choose an operation to start.</p>
+      <div className="hero-fx">
+        <CodeRain />
+        <div className="hero-copy">
+          <span className="tag">● LINK SECURE · NODE {config.appName.toUpperCase()}</span>
+          <h1><Glitch text="Operations console" /></h1>
+          <p className="muted">Choose an operation to start.</p>
+        </div>
+        <Radar />
+      </div>
+      <div className="fx-row">
+        <LiveTerminal title="root@relay-07:~" />
+        <div className="fx-stack">
+          <div className="fx-card"><span className="fx-label">Network map</span><NetGraph /></div>
+          <div className="fx-card"><span className="fx-label">Uplink load</span><Meters /></div>
+        </div>
       </div>
       <div className="tool-grid">
         {config.tools.map((tool) => {
@@ -95,6 +108,12 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
       )}
 
       {phase === "running" && (
+        <>
+        <div className="fx-strip">
+          <div className="fx-card"><span className="fx-label">Packet capture</span><HexStream rows={6} /></div>
+          <div className="fx-card"><span className="fx-label">Route to target</span><NetGraph /></div>
+          <div className="fx-card radar-sm"><Radar /></div>
+        </div>
         <div className="run-grid">
           <div className="card">
             <div className="row-between"><span className="muted">Target</span><b>{target}</b></div>
@@ -113,10 +132,12 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
             <span className="caret" />
           </div>
         </div>
+        </>
       )}
 
       {phase === "done" && (
-        <div className="run-grid">
+        <div className="run-grid granted-wrap">
+          <div className="granted"><Glitch text="ACCESS GRANTED" /></div>
           <div className="card">
             <div className="success"><Check size={16} /> {tool.steps[tool.steps.length - 1]}</div>
             <div className="row-between"><span className="muted">Target</span><b>{target}</b></div>

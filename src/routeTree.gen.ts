@@ -13,7 +13,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SplatRouteImport } from './routes/$'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as ScenarioRouteImport } from './routes/scenario'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -35,25 +34,18 @@ const DashboardRoute = DashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ScenarioRoute = ScenarioRouteImport.update({
-  id: '/scenario',
-  path: '/scenario',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/admin': typeof AdminRoute
   '/dashboard': typeof DashboardRoute
-  '/scenario': typeof ScenarioRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/admin': typeof AdminRoute
   '/dashboard': typeof DashboardRoute
-  '/scenario': typeof ScenarioRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -61,14 +53,13 @@ export interface FileRoutesById {
   '/$': typeof SplatRoute
   '/admin': typeof AdminRoute
   '/dashboard': typeof DashboardRoute
-  '/scenario': typeof ScenarioRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$' | '/admin' | '/dashboard' | '/scenario'
+  fullPaths: '/' | '/$' | '/admin' | '/dashboard'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$' | '/admin' | '/dashboard' | '/scenario'
-  id: '__root__' | '/' | '/$' | '/admin' | '/dashboard' | '/scenario'
+  to: '/' | '/$' | '/admin' | '/dashboard'
+  id: '__root__' | '/' | '/$' | '/admin' | '/dashboard'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -76,7 +67,6 @@ export interface RootRouteChildren {
   SplatRoute: typeof SplatRoute
   AdminRoute: typeof AdminRoute
   DashboardRoute: typeof DashboardRoute
-  ScenarioRoute: typeof ScenarioRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -109,13 +99,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/scenario': {
-      id: '/scenario'
-      path: '/scenario'
-      fullPath: '/scenario'
-      preLoaderRoute: typeof ScenarioRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -124,7 +107,6 @@ const rootRouteChildren: RootRouteChildren = {
   SplatRoute: SplatRoute,
   AdminRoute: AdminRoute,
   DashboardRoute: DashboardRoute,
-  ScenarioRoute: ScenarioRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

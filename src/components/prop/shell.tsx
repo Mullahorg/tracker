@@ -30,7 +30,6 @@ export function Shell({ children }: { children: ReactNode }) {
         </Link>
         <nav>
           <Link to="/dashboard" activeProps={{ className: "active" }}>Tools</Link>
-          <Link to="/scenario" activeProps={{ className: "active" }}>Scenarios</Link>
           <Link to="/admin" activeProps={{ className: "active" }}>Admin</Link>
         </nav>
         <span className="clock">{clock}</span>
