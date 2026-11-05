@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Activity, Archive, Bell, ChevronDown, Command, FileText, LayoutDashboard, LockKeyhole, MapPin, Menu, Radio, Search, Shield, Signal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,11 @@ const navItems = [
   { to: "/missions" as const, label: "Missions", icon: Activity },
   { to: "/admin" as const, label: "Admin panel", icon: Signal },
 ];
+const SearchContext = createContext("");
+
+export function useGlobalSearch() {
+  return useContext(SearchContext);
+}
 
 export function AegisShell({ children }: { children: ReactNode }) {
   const { synced } = useAegis();
@@ -73,7 +78,7 @@ export function AegisShell({ children }: { children: ReactNode }) {
         </header>
 
         {mobileMenu && <nav className="mobile-nav" aria-label="Mobile navigation">{navItems.map(({ to, label, icon: Icon }) => <Link key={to} to={to} onClick={() => setMobileMenu(false)} className="mobile-nav-link"><Icon size={16} />{label}</Link>)}</nav>}
-        <main className="aegis-content" data-search={query.toLowerCase()}>{children}</main>
+        <SearchContext.Provider value={query.toLowerCase()}><main className="aegis-content">{children}</main></SearchContext.Provider>
         <footer className="prop-footer"><span><Shield size={12} /> FICTIONAL INTERFACE — MOTION PICTURE PROP — NO REAL DATA OR CAPABILITIES.</span><span>AEGIS X <i>·</i> SIMULATED ENVIRONMENT</span></footer>
       </div>
 
