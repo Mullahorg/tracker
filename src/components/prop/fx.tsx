@@ -29,7 +29,7 @@ export function CodeRain({ opacity = 0.18 }: { opacity?: number }) {
       ctx.fillStyle = color;
       ctx.font = `${size - 2}px monospace`;
       cols.forEach((y, i) => {
-        ctx.fillText(chars[rand(chars.length)], i * size, y * size);
+        ctx.fillText(chars[rand(chars.length)] ?? "0", i * size, y * size);
         cols[i] = y * size > c.height && Math.random() > 0.97 ? 0 : y + 1;
       });
     }, 55);
@@ -59,7 +59,7 @@ export function LiveTerminal({ title = "root@node:~", speed = 260, lines = 14, c
   useEffect(() => {
     let i = rand(SCRIPT.length);
     const t = setInterval(() => {
-      setLog((l) => [...l.slice(-(lines - 1)), SCRIPT[i % SCRIPT.length]()]);
+      setLog((l) => [...l.slice(-(lines - 1)), SCRIPT[i % SCRIPT.length]!()]);
       i++;
     }, speed);
     return () => clearInterval(t);
@@ -110,12 +110,12 @@ export function Meters() {
 
 /** Network node graph with pulsing links. */
 export function NetGraph() {
-  const nodes = [[10, 50], [28, 20], [30, 78], [52, 45], [70, 18], [74, 75], [90, 48]];
-  const links = [[0, 1], [0, 2], [1, 3], [2, 3], [3, 4], [3, 5], [4, 6], [5, 6]];
+  const nodes: [number, number][] = [[10, 50], [28, 20], [30, 78], [52, 45], [70, 18], [74, 75], [90, 48]];
+  const links: [number, number][] = [[0, 1], [0, 2], [1, 3], [2, 3], [3, 4], [3, 5], [4, 6], [5, 6]];
   return (
     <svg className="netgraph" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
       {links.map(([a, b], i) => (
-        <line key={i} x1={nodes[a][0]} y1={nodes[a][1]} x2={nodes[b][0]} y2={nodes[b][1]} style={{ animationDelay: `${i * 0.3}s` }} />
+        <line key={i} x1={nodes[a]![0]} y1={nodes[a]![1]} x2={nodes[b]![0]} y2={nodes[b]![1]} style={{ animationDelay: `${i * 0.3}s` }} />
       ))}
       {nodes.map(([x, y], i) => <circle key={i} cx={x} cy={y} r={i === 6 ? 3 : 2} className={i === 6 ? "target" : ""} />)}
     </svg>
