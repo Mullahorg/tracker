@@ -20,11 +20,12 @@ function MissionDetailPage() {
   const [tab, setTab] = useState("OVERVIEW");
   const [lightbox, setLightbox] = useState<number | null>(null);
   if (!mission) throw notFound();
+  const missionId = mission.id;
   const completed = mission.objectives.filter((item) => item.done).length;
   const region = data.locations.find((item) => item.id === mission.locationId)?.region ?? "UNASSIGNED ZONE";
 
   function toggleObjective(objectiveId: string, checked: boolean) {
-    updateData((current) => ({ ...current, missions: current.missions.map((item) => item.id === mission.id ? { ...item, objectives: item.objectives.map((objective) => objective.id === objectiveId ? { ...objective, done: checked } : objective) } : item) }));
+    updateData((current) => ({ ...current, missions: current.missions.map((item) => item.id === missionId ? { ...item, objectives: item.objectives.map((objective) => objective.id === objectiveId ? { ...objective, done: checked } : objective) } : item) }));
     toast.success(checked ? "Objective marked complete" : "Objective reopened");
   }
 
