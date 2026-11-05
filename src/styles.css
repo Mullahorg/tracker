@@ -172,3 +172,4 @@ h2 { margin: 0 0 16px; font-size: 17px; font-weight: 600; }
   .page { padding: 28px 16px 48px; }
 }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+.scenario-out { white-space: pre-wrap; color: var(--foreground); font-size: 13px; }
