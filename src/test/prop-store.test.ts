@@ -34,8 +34,8 @@ describe("tool list", () => {
     delete legacyTool.outcome;
     delete legacyTool.durationSeconds;
     const config = _merge({ tools: [legacyTool as unknown as typeof first] });
-    expect(config.tools[0]?.outcome).toBe("success");
-    expect(config.tools[0]?.durationSeconds).toBe(8);
+    expect(config.tools[0]?.["outcome"]).toBe("success");
+    expect(config.tools[0]?.["durationSeconds"]).toBe(8);
   });
   it("keeps an admin-selected failure and delay within the supported range", () => {
     const first = _def.tools[0];
