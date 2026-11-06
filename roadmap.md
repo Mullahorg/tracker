@@ -3,3 +3,4 @@
 - [x] Remove missions/reports; tool screens: track user, plant spyware, breach, decrypt (simulated)
 - [x] Clean, low-noise design
 - [x] AI scenario simulator page (fictional outcomes)
+- [ ] Add per-tool simulated success/failure outcomes and configurable result timing in Admin

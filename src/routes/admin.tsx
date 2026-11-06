@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Shell } from "@/components/prop/shell";
 import { usePropStore } from "@/components/prop/store";
 import { ScenarioPanel } from "@/components/prop/scenario-panel";
-import { checkPin, parseRows, rowsToText, type Tool } from "@/lib/prop-store";
+import { checkPin, MAX_DURATION_SECONDS, MIN_DURATION_SECONDS, parseRows, rowsToText, type Tool } from "@/lib/prop-store";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -56,7 +56,9 @@ function AdminTabs() {
 function Settings() {
   const { config, update, reset } = usePropStore();
   const [toolId, setToolId] = useState(config.tools[0]?.id ?? "");
-  const tool = (config.tools.find((t) => t.id === toolId) ?? config.tools[0])!;
+  const tool = config.tools.find((t) => t.id === toolId) ?? config.tools[0];
+
+  if (!tool) return null;
 
   const setTool = (patch: Partial<Tool>) => update((c) => ({ ...c, tools: c.tools.map((t) => (t.id === tool.id ? { ...t, ...patch } : t)) }));
 
@@ -94,6 +96,8 @@ function Settings() {
           <label className="field"><span>Tool name</span><input value={tool.name} onChange={(e) => setTool({ name: e.target.value })} /></label>
           <label className="field"><span>Description</span><input value={tool.blurb} onChange={(e) => setTool({ blurb: e.target.value })} /></label>
           <label className="field"><span>Input label</span><input value={tool.inputLabel} onChange={(e) => setTool({ inputLabel: e.target.value })} /></label>
+          <label className="field"><span>Simulated outcome</span><select value={tool.outcome} onChange={(e) => setTool({ outcome: e.target.value as Tool["outcome"] })}><option value="success">Success</option><option value="failure">Fail</option></select></label>
+          <label className="field"><span>Result delay (seconds)</span><input type="number" min={MIN_DURATION_SECONDS} max={MAX_DURATION_SECONDS} step={1} value={tool.durationSeconds} onChange={(e) => { const value = e.currentTarget.valueAsNumber; if (Number.isFinite(value)) setTool({ durationSeconds: Math.min(MAX_DURATION_SECONDS, Math.max(MIN_DURATION_SECONDS, Math.round(value))) }); }} /></label>
           <label className="field"><span>Show map with result</span><select value={tool.showMap ? "yes" : "no"} onChange={(e) => setTool({ showMap: e.target.value === "yes" })}><option value="yes">Yes</option><option value="no">No</option></select></label>
           <label className="field"><span>Progress steps (one per line)</span><textarea rows={6} key={tool.id + "s"} defaultValue={tool.steps.join("\n")} onBlur={(e) => { const s = e.target.value.split("\n").map((l) => l.trim()).filter(Boolean); if (s.length) setTool({ steps: s }); }} /></label>
           <label className="field"><span>Result shown (Label: value, one per line)</span><textarea rows={6} key={tool.id + "r"} defaultValue={rowsToText(tool.result)} onBlur={(e) => setTool({ result: parseRows(e.target.value) })} /></label>

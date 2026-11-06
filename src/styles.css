@@ -220,6 +220,8 @@ h2 { margin: 0 0 16px; font-size: 17px; font-weight: 600; }
 
 .granted-wrap { position: relative; }
 .granted { grid-column: 1 / -1; padding: 14px; text-align: center; border: 1px solid var(--primary); border-radius: 12px; font-family: var(--font-mono); font-size: 20px; font-weight: 700; letter-spacing: .3em; color: var(--primary); background: color-mix(in oklab, var(--primary) 10%, transparent); animation: flash .5s 3; }
+.granted.failed { border-color: var(--destructive); color: var(--destructive); background: color-mix(in oklab, var(--destructive) 10%, transparent); }
+.failure { display: flex; align-items: center; gap: 8px; color: var(--destructive); font-weight: 600; }
 @keyframes flash { 50% { opacity: .3; } }
 .admin-tabs { margin-bottom: 20px; }
 

@@ -3,8 +3,12 @@ export const LOGIN_CODE = "zero4321#";
 export const ADMIN_PIN = "1838";
 export const STORAGE_KEY = "prop-console-v2";
 export const SESSION_KEY = "prop-console-session";
+export const DEFAULT_DURATION_SECONDS = 8;
+export const MIN_DURATION_SECONDS = 1;
+export const MAX_DURATION_SECONDS = 120;
 
 export type ResultRow = { label: string; value: string };
+export type ToolOutcome = "success" | "failure";
 export type Tool = {
   id: string;
   name: string;
@@ -12,6 +16,8 @@ export type Tool = {
   inputLabel: string;
   steps: string[];
   result: ResultRow[];
+  outcome: ToolOutcome;
+  durationSeconds: number;
   showMap: boolean;
   mapX: number;
   mapY: number;
@@ -35,6 +41,8 @@ export const defaultConfig: PropConfig = {
         { label: "Device", value: "Android · Pixel 7" },
         { label: "Accuracy", value: "± 12 m" },
       ],
+      outcome: "success",
+      durationSeconds: DEFAULT_DURATION_SECONDS,
       showMap: true,
       mapX: 58,
       mapY: 46,
@@ -52,6 +60,8 @@ export const defaultConfig: PropConfig = {
         { label: "Camera", value: "Standby" },
         { label: "Last message", value: "“Meet me at the station at 9.”" },
       ],
+      outcome: "success",
+      durationSeconds: DEFAULT_DURATION_SECONDS,
       showMap: false,
       mapX: 50,
       mapY: 50,
@@ -67,6 +77,8 @@ export const defaultConfig: PropConfig = {
         { label: "Devices online", value: "23" },
         { label: "Admin user", value: "sysadmin" },
       ],
+      outcome: "success",
+      durationSeconds: DEFAULT_DURATION_SECONDS,
       showMap: false,
       mapX: 50,
       mapY: 50,
@@ -82,6 +94,8 @@ export const defaultConfig: PropConfig = {
         { label: "Key", value: "A7F3-91C2-0BDE" },
         { label: "Contents", value: "Bank transfers, 2019–2024" },
       ],
+      outcome: "success",
+      durationSeconds: DEFAULT_DURATION_SECONDS,
       showMap: false,
       mapX: 50,
       mapY: 50,
@@ -108,13 +122,28 @@ export const defaultConfig: PropConfig = {
 };
 
 function tool(id: string, name: string, blurb: string, inputLabel: string, steps: string[], result: ResultRow[], showMap = false): Tool {
-  return { id, name, blurb, inputLabel, steps, result, showMap, mapX: 50, mapY: 50 };
+  return { id, name, blurb, inputLabel, steps, result, outcome: "success", durationSeconds: DEFAULT_DURATION_SECONDS, showMap, mapX: 50, mapY: 50 };
 }
 
 /** Saved settings keep their edits, and any tools added later still appear. */
 export function mergeConfig(saved: Partial<PropConfig>): PropConfig {
   const savedTools = saved.tools ?? [];
-  const tools = [...savedTools, ...defaultConfig.tools.filter((t) => !savedTools.some((s) => s.id === t.id))];
+  const tools = [
+    ...savedTools.map((savedTool) => {
+      const defaults = defaultConfig.tools.find((toolConfig) => toolConfig.id === savedTool.id);
+      const fallback = defaults ?? defaultConfig.tools[0];
+      const duration = savedTool.durationSeconds;
+      return {
+        ...(defaults ?? {}),
+        ...savedTool,
+        outcome: savedTool.outcome === "failure" || savedTool.outcome === "success" ? savedTool.outcome : "success",
+        durationSeconds: typeof duration === "number" && Number.isFinite(duration)
+          ? Math.min(MAX_DURATION_SECONDS, Math.max(MIN_DURATION_SECONDS, Math.round(duration)))
+          : fallback?.durationSeconds ?? DEFAULT_DURATION_SECONDS,
+      };
+    }),
+    ...defaultConfig.tools.filter((toolConfig) => !savedTools.some((savedTool) => savedTool.id === toolConfig.id)),
+  ];
   return { ...defaultConfig, ...saved, tools };
 }
 

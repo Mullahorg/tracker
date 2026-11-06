@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Crosshair, Bug, Wifi, FileLock2, ArrowLeft, Check, KeyRound, MessageSquare, Cctv, Cpu, Mail, Satellite } from "lucide-react";
+import { Crosshair, Bug, Wifi, FileLock2, ArrowLeft, Check, X, KeyRound, MessageSquare, Cctv, Cpu, Mail, Satellite } from "lucide-react";
 import { Shell } from "@/components/prop/shell";
 import { usePropStore } from "@/components/prop/store";
 import type { Tool } from "@/lib/prop-store";
@@ -72,24 +72,29 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
 
   useEffect(() => {
     if (phase !== "running") return;
-    const total = tool.steps.length * 22;
+    const durationMs = tool.durationSeconds * 1000;
+    const startedAt = Date.now();
     let tick = 0;
     const t = setInterval(() => {
       tick++;
-      setProgress(Math.min(100, Math.round((tick / total) * 100)));
-      const s = Math.min(tool.steps.length - 1, Math.floor(tick / 22));
+      const fraction = Math.min(1, (Date.now() - startedAt) / durationMs);
+      setProgress(Math.min(99, Math.floor(fraction * 100)));
+      const s = Math.min(tool.steps.length - 1, Math.floor(fraction * tool.steps.length));
       setStep(s);
       if (tick % 3 === 0) {
         const hex = Array.from({ length: 4 }, () => Math.floor(Math.random() * 65535).toString(16).padStart(4, "0")).join(" ");
         setLog((l) => [...l.slice(-40), `[${(tool.steps[s] ?? "").toLowerCase()}] 0x${hex}`]);
       }
-      if (tick >= total) {
-        clearInterval(t);
-        setTimeout(() => setPhase("done"), 400);
-      }
-    }, 70);
-    return () => clearInterval(t);
-  }, [phase, tool.steps]);
+    }, 100);
+    const finish = setTimeout(() => {
+      setProgress(100);
+      setPhase("done");
+    }, durationMs);
+    return () => {
+      clearInterval(t);
+      clearTimeout(finish);
+    };
+  }, [phase, tool.durationSeconds, tool.steps]);
 
   useEffect(() => {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight });
@@ -118,11 +123,11 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
           <div className="card">
             <div className="row-between"><span className="muted">Target</span><b>{target}</b></div>
             <div className="bar"><span style={{ width: `${progress}%` }} /></div>
-            <div className="row-between small"><span>{tool.steps[step]}…</span><span>{progress}%</span></div>
+            <div className="row-between small"><span>{tool.outcome === "failure" && step === tool.steps.length - 1 ? "Evaluating simulated outcome" : tool.steps[step]}…</span><span>{progress}%</span></div>
             <ol className="steps">
               {tool.steps.map((s, i) => (
                 <li key={s + i} className={i < step ? "done" : i === step ? "now" : ""}>
-                  <span className="step-dot">{i < step ? <Check size={11} /> : i + 1}</span>{s}
+                  <span className="step-dot">{i < step ? <Check size={11} /> : i + 1}</span>{tool.outcome === "failure" && i === tool.steps.length - 1 ? "Evaluating simulated outcome" : s}
                 </li>
               ))}
             </ol>
@@ -137,17 +142,19 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
 
       {phase === "done" && (
         <div className="run-grid granted-wrap">
-          <div className="granted"><Glitch text="ACCESS GRANTED" /></div>
+          <div className={`granted ${tool.outcome === "failure" ? "failed" : ""}`}><Glitch text={tool.outcome === "success" ? "SIMULATION SUCCESS" : "SIMULATION FAILED"} /></div>
           <div className="card">
-            <div className="success"><Check size={16} /> {tool.steps[tool.steps.length - 1]}</div>
+            {tool.outcome === "success"
+              ? <div className="success"><Check size={16} /> {tool.steps[tool.steps.length - 1] ?? "Simulated operation complete"}</div>
+              : <div className="failure"><X size={16} /> Simulated operation failed</div>}
             <div className="row-between"><span className="muted">Target</span><b>{target}</b></div>
-            <dl className="result">
-              {tool.result.map((r, i) => <div key={i}><dt>{r.label}</dt><dd>{r.value}</dd></div>)}
-            </dl>
+            {tool.outcome === "success"
+              ? <dl className="result">{tool.result.map((r, i) => <div key={i}><dt>{r.label}</dt><dd>{r.value}</dd></div>)}</dl>
+              : <p className="muted">No result data was returned for this simulated run.</p>}
             <button className="btn" onClick={() => { setPhase("input"); setLog([]); setProgress(0); setStep(0); }}>Run again</button>
           </div>
-          {tool.showMap ? <FakeMap x={tool.mapX} y={tool.mapY} /> : (
-            <div className="terminal">{log.slice(-18).map((l, i) => <div key={i}>{l}</div>)}<div className="ok">// operation complete</div></div>
+          {tool.showMap && tool.outcome === "success" ? <FakeMap x={tool.mapX} y={tool.mapY} /> : (
+            <div className="terminal">{log.slice(-18).map((l, i) => <div key={i}>{l}</div>)}<div className={tool.outcome === "success" ? "ok" : "failure"}>// simulated run complete · {tool.outcome}</div></div>
           )}
         </div>
       )}
