@@ -15,12 +15,33 @@ describe("access codes", () => {
   });
 });
 
-import { mergeConfig as _merge, defaultConfig as _def } from "@/lib/prop-store";
+import { mergeConfig as _merge, defaultConfig as _def, DEFAULT_DURATION_SECONDS } from "@/lib/prop-store";
 describe("tool list", () => {
   it("has 10 tools", () => expect(_def.tools).toHaveLength(10));
+  it("defaults every tool to a successful simulated result after eight seconds", () => {
+    expect(_def.tools.every((tool) => tool.outcome === "success" && tool.durationSeconds === 8)).toBe(true);
+    expect(DEFAULT_DURATION_SECONDS).toBe(8);
+  });
   it("adds new tools to older saved settings without losing edits", () => {
     const c = _merge({ tools: [{ ..._def.tools[0]!, name: "Edited" }] });
     expect(c.tools).toHaveLength(10);
     expect(c.tools[0]!.name).toBe("Edited");
+  });
+  it("fills timing and outcome defaults for older saved tool settings", () => {
+    const first = _def.tools[0];
+    if (!first) throw new Error("Expected a default tool");
+    const legacyTool = { ...first, name: "Edited" } as Record<string, unknown>;
+    delete legacyTool.outcome;
+    delete legacyTool.durationSeconds;
+    const config = _merge({ tools: [legacyTool as unknown as typeof first] });
+    expect(config.tools[0]?.outcome).toBe("success");
+    expect(config.tools[0]?.durationSeconds).toBe(8);
+  });
+  it("keeps an admin-selected failure and delay within the supported range", () => {
+    const first = _def.tools[0];
+    if (!first) throw new Error("Expected a default tool");
+    const config = _merge({ tools: [{ ...first, outcome: "failure", durationSeconds: 14 }] });
+    expect(config.tools[0]?.outcome).toBe("failure");
+    expect(config.tools[0]?.durationSeconds).toBe(14);
   });
 });
