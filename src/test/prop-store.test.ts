@@ -54,6 +54,8 @@ describe("tool list", () => {
     const passwordTool = _def.tools.find((tool) => tool.id === "password");
     const mailTool = _def.tools.find((tool) => tool.id === "mail");
     expect(passwordTool?.result.some((row) => row.value.includes("@paperkite.invalid"))).toBe(true);
+    expect(passwordTool?.result.some((row) => row.label === "Matched hash" && row.value.includes("SIMULATED_SAMPLE_ONLY"))).toBe(true);
+    expect(passwordTool?.result.some((row) => row.label === "Outcome" && row.value.includes("no password revealed"))).toBe(true);
     expect(mailTool?.result.every((row) => row.label.includes("@paperkite.invalid"))).toBe(true);
   });
 });
