@@ -31,8 +31,8 @@ describe("tool list", () => {
     const first = _def.tools[0];
     if (!first) throw new Error("Expected a default tool");
     const legacyTool = { ...first, name: "Edited" } as Record<string, unknown>;
-    delete legacyTool.outcome;
-    delete legacyTool.durationSeconds;
+    delete legacyTool["outcome"];
+    delete legacyTool["durationSeconds"];
     const config = _merge({ tools: [legacyTool as unknown as typeof first] });
     expect(config.tools[0]?.["outcome"]).toBe("success");
     expect(config.tools[0]?.["durationSeconds"]).toBe(8);
