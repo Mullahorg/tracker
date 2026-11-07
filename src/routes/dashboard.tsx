@@ -178,7 +178,7 @@ function ResultDisplay({ tool }: { tool: Tool }) {
       {view === "credential" && (
         <div className="result-artifact">
           <div className="artifact-brand"><span className="artifact-mark">PK</span><span>PAPER KITE <small>FICTIONAL DEMO APP</small></span></div>
-          <span className="artifact-label">HASH SAMPLE</span>
+          <span className="artifact-label">SIMULATED HASH MATCH <span>NON-VALID SAMPLE</span></span>
           <code>{rows.find((row) => row.label.toLowerCase().includes("hash"))?.value ?? "$2b$12$SIMULATED_SAMPLE_ONLY"}</code>
         </div>
       )}
