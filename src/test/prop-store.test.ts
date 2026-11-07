@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkLogin, checkPin, parseRows } from "@/lib/prop-store";
+import { checkLogin, checkPin, parseRows, resultViewForTool } from "@/lib/prop-store";
 
 describe("access codes", () => {
   it("accepts the login password zero4321#", () => {
@@ -31,8 +31,8 @@ describe("tool list", () => {
     const first = _def.tools[0];
     if (!first) throw new Error("Expected a default tool");
     const legacyTool = { ...first, name: "Edited" } as Record<string, unknown>;
-    delete legacyTool.outcome;
-    delete legacyTool.durationSeconds;
+    delete legacyTool["outcome"];
+    delete legacyTool["durationSeconds"];
     const config = _merge({ tools: [legacyTool as unknown as typeof first] });
     expect(config.tools[0]?.["outcome"]).toBe("success");
     expect(config.tools[0]?.["durationSeconds"]).toBe(8);
@@ -43,5 +43,19 @@ describe("tool list", () => {
     const config = _merge({ tools: [{ ...first, outcome: "failure", durationSeconds: 14 }] });
     expect(config.tools[0]?.outcome).toBe("failure");
     expect(config.tools[0]?.durationSeconds).toBe(14);
+  });
+  it("assigns a dedicated simulated result view to every tool type", () => {
+    expect(_def.tools.map((tool) => resultViewForTool(tool.id))).toEqual([
+      "location", "spyware", "network", "archive", "credential", "chat", "camera", "network", "mail", "satellite",
+    ]);
+    expect(resultViewForTool("unknown")).toBe("generic");
+  });
+  it("uses fictional app identities and reserved invalid email domains in example results", () => {
+    const passwordTool = _def.tools.find((tool) => tool.id === "password");
+    const mailTool = _def.tools.find((tool) => tool.id === "mail");
+    expect(passwordTool?.result.some((row) => row.value.includes("@paperkite.invalid"))).toBe(true);
+    expect(passwordTool?.result.some((row) => row.label === "Matched hash" && row.value.includes("SIMULATED_SAMPLE_ONLY"))).toBe(true);
+    expect(passwordTool?.result.some((row) => row.label === "Outcome" && row.value.includes("no password revealed"))).toBe(true);
+    expect(mailTool?.result.every((row) => row.label.includes("@paperkite.invalid"))).toBe(true);
   });
 });

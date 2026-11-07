@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Crosshair, Bug, Wifi, FileLock2, ArrowLeft, Check, X, KeyRound, MessageSquare, Cctv, Cpu, Mail, Satellite } from "lucide-react";
 import { Shell } from "@/components/prop/shell";
 import { usePropStore } from "@/components/prop/store";
-import type { Tool } from "@/lib/prop-store";
+import { resultViewForTool, type Tool } from "@/lib/prop-store";
 import { CodeRain, Glitch, HexStream, LiveTerminal, Meters, NetGraph, Radar } from "@/components/prop/fx";
 
 export const Route = createFileRoute("/dashboard")({
@@ -149,15 +149,64 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
               : <div className="failure"><X size={16} /> Simulated operation failed</div>}
             <div className="row-between"><span className="muted">Target</span><b>{target}</b></div>
             {tool.outcome === "success"
-              ? <dl className="result">{tool.result.map((r, i) => <div key={i}><dt>{r.label}</dt><dd>{r.value}</dd></div>)}</dl>
+              ? <ResultDisplay tool={tool} />
               : <p className="muted">No result data was returned for this simulated run.</p>}
             <button className="btn" onClick={() => { setPhase("input"); setLog([]); setProgress(0); setStep(0); }}>Run again</button>
           </div>
-          {tool.showMap && tool.outcome === "success" ? <FakeMap x={tool.mapX} y={tool.mapY} /> : (
+          {tool.showMap && tool.outcome === "success" ? (
+            <div className="result-map-panel">
+              <div className="simulation-stamp">SIMULATED · LOCAL PROP DATA</div>
+              <div className="map-caption"><span>{tool.id === "cctv" ? "CAM-07 · STATIC MAP TILE" : tool.id === "satellite" ? "SYNTHETIC OVERHEAD TILE" : "FICTIONAL LOCATION TILE"}</span><span>NO LIVE FEED</span></div>
+              <FakeMap x={tool.mapX} y={tool.mapY} />
+            </div>
+          ) : (
             <div className="terminal">{log.slice(-18).map((l, i) => <div key={i}>{l}</div>)}<div className={tool.outcome === "success" ? "ok" : "failure"}>// simulated run complete · {tool.outcome}</div></div>
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function ResultDisplay({ tool }: { tool: Tool }) {
+  const view = resultViewForTool(tool.id);
+  const rows = tool.result;
+
+  return (
+    <div className={`result-display result-display-${view}`}>
+      <div className="simulation-stamp">SIMULATED · LOCAL PROP DATA</div>
+      {view === "credential" && (
+        <div className="result-artifact">
+          <div className="artifact-brand"><span className="artifact-mark">PK</span><span>PAPER KITE <small>FICTIONAL DEMO APP</small></span></div>
+          <span className="artifact-label">SIMULATED HASH MATCH <span>NON-VALID SAMPLE</span></span>
+          <code>{rows.find((row) => row.label.toLowerCase().includes("hash"))?.value ?? "$2b$12$SIMULATED_SAMPLE_ONLY"}</code>
+        </div>
+      )}
+      {view === "chat" && (
+        <div className="chat-preview">
+          <div className="chat-preview-head"><span>Paper Kite Chat</span><span>OFFLINE DEMO</span></div>
+          {rows.map((row, index) => (
+            <div className={`chat-bubble ${index % 2 === 0 ? "incoming" : "outgoing"}`} key={`${row.label}-${index}`}>
+              <span>{row.label}</span><p>{row.value}</p><small>PROP MESSAGE</small>
+            </div>
+          ))}
+        </div>
+      )}
+      {view === "mail" && (
+        <div className="mail-preview">
+          <div className="mail-preview-head"><span>Paper Kite Mail</span><span>FICTIONAL INBOX</span></div>
+          {rows.map((row, index) => (
+            <div className="mail-row" key={`${row.label}-${index}`}><span className="mail-dot" /><div><strong>{row.label}</strong><p>{row.value}</p></div></div>
+          ))}
+        </div>
+      )}
+      {(view === "network" || view === "spyware") && (
+        <div className="result-visual" aria-label={view === "network" ? "Simulated network diagram" : "Simulated device status panel"}>
+          {view === "network" ? <NetGraph /> : <div className="device-status"><span>DEMO DEVICE</span><div /><div /><div /></div>}
+        </div>
+      )}
+      {view === "archive" && <div className="archive-strip"><span>PROP ARCHIVE</span><span>READ-ONLY · SIMULATED</span></div>}
+      <dl className="result result-data">{rows.map((row, index) => <div key={`${row.label}-${index}`}><dt>{row.label}</dt><dd>{row.value}</dd></div>)}</dl>
     </div>
   );
 }
