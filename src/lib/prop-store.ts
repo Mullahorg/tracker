@@ -9,6 +9,24 @@ export const MAX_DURATION_SECONDS = 120;
 
 export type ResultRow = { label: string; value: string };
 export type ToolOutcome = "success" | "failure";
+export type ResultViewKind = "location" | "spyware" | "network" | "archive" | "credential" | "chat" | "camera" | "mail" | "satellite" | "generic";
+
+export function resultViewForTool(id: string): ResultViewKind {
+  const views: Record<string, ResultViewKind> = {
+    track: "location",
+    spyware: "spyware",
+    breach: "network",
+    decrypt: "archive",
+    password: "credential",
+    intercept: "chat",
+    cctv: "camera",
+    firewall: "network",
+    mail: "mail",
+    satellite: "satellite",
+  };
+  return views[id] ?? "generic";
+}
+
 export type Tool = {
   id: string;
   name: string;
@@ -102,19 +120,19 @@ export const defaultConfig: PropConfig = {
     },
     tool("password", "Crack password", "Recover the password for a locked account.", "Account or email",
       ["Fetching hash", "Loading wordlists", "Running GPU cracker", "Testing candidates", "Password found"],
-      [{ label: "Account", value: "j.mwangi@example.com" }, { label: "Password", value: "Sunrise#2021" }, { label: "Attempts", value: "4,812,330" }]),
+      [{ label: "Dummy app", value: "Paper Kite · fictional" }, { label: "Account", value: "demo@paperkite.invalid" }, { label: "Hash sample", value: "$2b$12$8Qf2...SIMULATED..." }, { label: "Outcome", value: "Match shown for prop only" }]),
     tool("intercept", "Intercept messages", "Capture messages sent to and from a device.", "Phone number",
       ["Locating handset", "Joining relay", "Syncing inbox", "Decoding messages", "Feed live"],
-      [{ label: "Messages", value: "312" }, { label: "Latest", value: "“The package moves tonight.”" }, { label: "From", value: "Unknown sender" }]),
+      [{ label: "Moth → Rook · 08:41", value: "The lantern is set for rehearsal." }, { label: "Rook → Moth · 08:43", value: "Copy. Meet by the paper moon." }]),
     tool("cctv", "Access CCTV", "Tap into a camera feed near a location.", "Street or building",
       ["Scanning nearby cameras", "Testing default logins", "Opening stream", "Buffering video", "Feed connected"],
-      [{ label: "Camera", value: "CAM-07 · Main entrance" }, { label: "Status", value: "Live" }, { label: "Recording", value: "Last 48 hours" }], true),
+      [{ label: "Camera", value: "CAM-07 · fictional set" }, { label: "Tile", value: "Static map preview · simulated" }, { label: "Source", value: "Local illustration only" }], true),
     tool("firewall", "Bypass firewall", "Slip past a server's defences.", "Server address",
       ["Probing ports", "Fingerprinting firewall", "Crafting packets", "Tunnelling through", "Firewall bypassed"],
       [{ label: "Server", value: "10.4.22.9" }, { label: "Open ports", value: "22, 443, 8080" }, { label: "Access", value: "Granted" }]),
     tool("mail", "Dump inbox", "Download every email from an account.", "Email address",
       ["Resolving mail server", "Replaying session", "Listing folders", "Downloading mail", "Inbox copied"],
-      [{ label: "Emails", value: "2,947" }, { label: "Attachments", value: "418" }, { label: "Flagged", value: "“Contract — final”" }]),
+      [{ label: "08:42 · rehearsal@paperkite.invalid", value: "Stage call sheet · Prop message" }, { label: "08:17 · moth@paperkite.invalid", value: "The paper moon · Prop message" }, { label: "Yesterday · rook@paperkite.invalid", value: "Set notes · Prop message" }]),
     tool("satellite", "Satellite view", "Point a satellite at a target area.", "Place or coordinates",
       ["Requesting uplink", "Aligning satellite", "Adjusting zoom", "Enhancing image", "Image ready"],
       [{ label: "Satellite", value: "ORBIT-3" }, { label: "Resolution", value: "30 cm" }, { label: "Captured", value: "2 min ago" }], true),
