@@ -1,7 +1,1 @@
-- [x] One-time password login screen
-- [x] Admin panel unlocked by PIN, with favicon upload, app name, and tool result editing
-- [x] Remove missions/reports; tool screens: track user, plant spyware, breach, decrypt (simulated)
-- [x] Clean, low-noise design
-- [x] AI scenario simulator page (fictional outcomes)
-- [x] Add per-tool simulated success/failure outcomes and configurable result timing in Admin
-- [x] Add clearly simulated, tool-specific result layouts with fictional dummy app names and sample data
+- [x] build real backend
