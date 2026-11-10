@@ -20,7 +20,18 @@ export const Route = createFileRoute("/dashboard")({
   component: Dashboard,
 });
 
-const icons: Record<string, typeof Crosshair> = { track: Crosshair, spyware: Bug, breach: Wifi, decrypt: FileLock2, password: KeyRound, intercept: MessageSquare, cctv: Cctv, firewall: Cpu, mail: Mail, satellite: Satellite };
+const icons: Record<string, typeof Crosshair> = {
+  track: Crosshair,
+  spyware: Bug,
+  breach: Wifi,
+  decrypt: FileLock2,
+  password: KeyRound,
+  intercept: MessageSquare,
+  cctv: Cctv,
+  firewall: Cpu,
+  mail: Mail,
+  satellite: Satellite,
+};
 
 function Dashboard() {
   const { config } = usePropStore();
@@ -63,12 +74,19 @@ function Dashboard() {
 }
 
 function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
-  const [target, setTarget] = useState("");
+  const [fields, setFields] = useState({
+    target: "",
+    selector: "",
+    reference: "",
+    notes: "",
+  });
   const [phase, setPhase] = useState<"input" | "running" | "done">("input");
   const [step, setStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const [log, setLog] = useState<string[]>([]);
   const logRef = useRef<HTMLDivElement>(null);
+
+  const target = fields.target;
 
   useEffect(() => {
     if (phase !== "running") return;
@@ -107,60 +125,130 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
 
       {phase === "input" && (
         <form className="card narrow" onSubmit={(e) => { e.preventDefault(); setPhase("running"); }}>
-          <label className="field"><span>{tool.inputLabel}</span><input autoFocus value={target} onChange={(e) => setTarget(e.target.value)} /></label>
-          <button className="btn primary" disabled={!target.trim()}>Start</button>
+          <label className="field">
+            <span>{tool.inputLabel}</span>
+            <input
+              autoFocus
+              value={fields.target}
+              onChange={(e) => setFields((f) => ({ ...f, target: e.target.value }))}
+            />
+            <small className="hint">Primary target, host, account, or identifier for this run.</small>
+          </label>
+
+          <label className="field">
+            <span>Scope / selector</span>
+            <input
+              value={fields.selector}
+              onChange={(e) => setFields((f) => ({ ...f, selector: e.target.value }))}
+            />
+            <small className="hint">Optional range, device ID, alias, or path to narrow the run.</small>
+          </label>
+
+          <label className="field">
+            <span>Authorization reference</span>
+            <input
+              value={fields.reference}
+              onChange={(e) => setFields((f) => ({ ...f, reference: e.target.value }))}
+            />
+            <small className="hint">Ticket, work order, or approval ID for audit context.</small>
+          </label>
+
+          <label className="field">
+            <span>Operator notes</span>
+            <input
+              value={fields.notes}
+              onChange={(e) => setFields((f) => ({ ...f, notes: e.target.value }))}
+            />
+            <small className="hint">Optional context shown with the run record.</small>
+          </label>
+
+          <button className="btn primary" disabled={!fields.target.trim()}>Start</button>
         </form>
       )}
 
       {phase === "running" && (
         <>
-        <div className="fx-strip">
-          <div className="fx-card"><span className="fx-label">Packet capture</span><HexStream rows={6} /></div>
-          <div className="fx-card"><span className="fx-label">Route to target</span><NetGraph /></div>
-          <div className="fx-card radar-sm"><Radar /></div>
-        </div>
-        <div className="run-grid">
-          <div className="card">
-            <div className="row-between"><span className="muted">Target</span><b>{target}</b></div>
-            <div className="bar"><span style={{ width: `${progress}%` }} /></div>
-            <div className="row-between small"><span>{tool.outcome === "failure" && step === tool.steps.length - 1 ? "Evaluating simulated outcome" : tool.steps[step]}…</span><span>{progress}%</span></div>
-            <ol className="steps">
-              {tool.steps.map((s, i) => (
-                <li key={s + i} className={i < step ? "done" : i === step ? "now" : ""}>
-                  <span className="step-dot">{i < step ? <Check size={11} /> : i + 1}</span>{tool.outcome === "failure" && i === tool.steps.length - 1 ? "Evaluating simulated outcome" : s}
-                </li>
-              ))}
-            </ol>
+          <div className="fx-strip">
+            <div className="fx-card"><span className="fx-label">Packet capture</span><HexStream rows={6} /></div>
+            <div className="fx-card"><span className="fx-label">Route to target</span><NetGraph /></div>
+            <div className="fx-card radar-sm"><Radar /></div>
           </div>
-          <div className="terminal" ref={logRef}>
-            {log.map((l, i) => <div key={i}>{l}</div>)}
-            <span className="caret" />
+          <div className="run-grid">
+            <div className="card">
+              <div className="row-between"><span className="muted">Target</span><b>{target}</b></div>
+              <div className="bar"><span style={{ width: `${progress}%` }} /></div>
+              <div className="row-between small">
+                <span>
+                  {tool.outcome === "failure" && step === tool.steps.length - 1
+                    ? "Evaluating outcome"
+                    : tool.steps[step]}…
+                </span>
+                <span>{progress}%</span>
+              </div>
+              <ol className="steps">
+                {tool.steps.map((s, i) => (
+                  <li key={s + i} className={i < step ? "done" : i === step ? "now" : ""}>
+                    <span className="step-dot">{i < step ? <Check size={11} /> : i + 1}</span>
+                    {tool.outcome === "failure" && i === tool.steps.length - 1 ? "Evaluating outcome" : s}
+                  </li>
+                ))}
+              </ol>
+            </div>
+            <div className="terminal" ref={logRef}>
+              {log.map((l, i) => <div key={i}>{l}</div>)}
+              <span className="caret" />
+            </div>
           </div>
-        </div>
         </>
       )}
 
       {phase === "done" && (
         <div className="run-grid granted-wrap">
-          <div className={`granted ${tool.outcome === "failure" ? "failed" : ""}`}><Glitch text={tool.outcome === "success" ? "SIMULATION SUCCESS" : "SIMULATION FAILED"} /></div>
+          <div className={`granted ${tool.outcome === "failure" ? "failed" : ""}`}>
+            <Glitch text={tool.outcome === "success" ? "OPERATION SUCCESS" : "OPERATION FAILED"} />
+          </div>
           <div className="card">
             {tool.outcome === "success"
-              ? <div className="success"><Check size={16} /> {tool.steps[tool.steps.length - 1] ?? "Simulated operation complete"}</div>
-              : <div className="failure"><X size={16} /> Simulated operation failed</div>}
+              ? <div className="success"><Check size={16} /> {tool.steps[tool.steps.length - 1] ?? "Operation complete"}</div>
+              : <div className="failure"><X size={16} /> Operation failed</div>}
             <div className="row-between"><span className="muted">Target</span><b>{target}</b></div>
             {tool.outcome === "success"
               ? <ResultDisplay tool={tool} />
-              : <p className="muted">No result data was returned for this simulated run.</p>}
-            <button className="btn" onClick={() => { setPhase("input"); setLog([]); setProgress(0); setStep(0); }}>Run again</button>
+              : <p className="muted">No result data was returned for this run.</p>}
+            <button
+              className="btn"
+              onClick={() => {
+                setPhase("input");
+                setLog([]);
+                setProgress(0);
+                setStep(0);
+              }}
+            >
+              Run again
+            </button>
           </div>
           {tool.showMap && tool.outcome === "success" ? (
             <div className="result-map-panel">
-              <div className="simulation-stamp">SIMULATED · LOCAL PROP DATA</div>
-              <div className="map-caption"><span>{tool.id === "cctv" ? "CAM-07 · STATIC MAP TILE" : tool.id === "satellite" ? "SYNTHETIC OVERHEAD TILE" : "FICTIONAL LOCATION TILE"}</span><span>NO LIVE FEED</span></div>
+              <div className="local-stamp">LOCAL DATA · PROP RECORD</div>
+              <div className="map-caption">
+                <span>
+                  {tool.id === "cctv"
+                    ? "CAM-07 · STATIC MAP TILE"
+                    : tool.id === "satellite"
+                      ? "OVERHEAD TILE"
+                      : "LOCATION TILE"}
+                </span>
+                <span>NO LIVE FEED</span>
+              </div>
               <FakeMap x={tool.mapX} y={tool.mapY} />
             </div>
           ) : (
-            <div className="terminal">{log.slice(-18).map((l, i) => <div key={i}>{l}</div>)}<div className={tool.outcome === "success" ? "ok" : "failure"}>// simulated run complete · {tool.outcome}</div></div>
+            <div className="terminal">
+              {log.slice(-18).map((l, i) => <div key={i}>{l}</div>)}
+              <div className={tool.outcome === "success" ? "ok" : "failure"}>
+                // run complete · {tool.outcome}
+              </div>
+            </div>
           )}
         </div>
       )}
@@ -174,12 +262,15 @@ function ResultDisplay({ tool }: { tool: Tool }) {
 
   return (
     <div className={`result-display result-display-${view}`}>
-      <div className="simulation-stamp">SIMULATED · LOCAL PROP DATA</div>
+      <div className="local-stamp">LOCAL DATA · PROP RECORD</div>
       {view === "credential" && (
         <div className="result-artifact">
-          <div className="artifact-brand"><span className="artifact-mark">PK</span><span>PAPER KITE <small>FICTIONAL DEMO APP</small></span></div>
-          <span className="artifact-label">SIMULATED HASH MATCH <span>NON-VALID SAMPLE</span></span>
-          <code>{rows.find((row) => row.label.toLowerCase().includes("hash"))?.value ?? "$2b$12$SIMULATED_SAMPLE_ONLY"}</code>
+          <div className="artifact-brand">
+            <span className="artifact-mark">PK</span>
+            <span>PAPER KITE <small>FICTIONAL DEMO APP</small></span>
+          </div>
+          <span className="artifact-label">HASH MATCH <span>NON-VALID SAMPLE</span></span>
+          <code>{rows.find((row) => row.label.toLowerCase().includes("hash"))?.value ?? "$2b$12$SAMPLE_ONLY"}</code>
         </div>
       )}
       {view === "chat" && (
@@ -196,17 +287,27 @@ function ResultDisplay({ tool }: { tool: Tool }) {
         <div className="mail-preview">
           <div className="mail-preview-head"><span>Paper Kite Mail</span><span>FICTIONAL INBOX</span></div>
           {rows.map((row, index) => (
-            <div className="mail-row" key={`${row.label}-${index}`}><span className="mail-dot" /><div><strong>{row.label}</strong><p>{row.value}</p></div></div>
+            <div className="mail-row" key={`${row.label}-${index}`}>
+              <span className="mail-dot" />
+              <div><strong>{row.label}</strong><p>{row.value}</p></div>
+            </div>
           ))}
         </div>
       )}
       {(view === "network" || view === "spyware") && (
-        <div className="result-visual" aria-label={view === "network" ? "Simulated network diagram" : "Simulated device status panel"}>
+        <div
+          className="result-visual"
+          aria-label={view === "network" ? "Network diagram" : "Device status panel"}
+        >
           {view === "network" ? <NetGraph /> : <div className="device-status"><span>DEMO DEVICE</span><div /><div /><div /></div>}
         </div>
       )}
-      {view === "archive" && <div className="archive-strip"><span>PROP ARCHIVE</span><span>READ-ONLY · SIMULATED</span></div>}
-      <dl className="result result-data">{rows.map((row, index) => <div key={`${row.label}-${index}`}><dt>{row.label}</dt><dd>{row.value}</dd></div>)}</dl>
+      {view === "archive" && <div className="archive-strip"><span>PROP ARCHIVE</span><span>READ-ONLY · LOCAL DATA</span></div>}
+      <dl className="result result-data">
+        {rows.map((row, index) => (
+          <div key={`${row.label}-${index}`}><dt>{row.label}</dt><dd>{row.value}</dd></div>
+        ))}
+      </dl>
     </div>
   );
 }
