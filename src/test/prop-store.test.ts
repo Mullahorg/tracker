@@ -59,3 +59,10 @@ describe("tool list", () => {
     expect(mailTool?.result.every((row) => row.label.includes("@paperkite.invalid"))).toBe(true);
   });
 });
+
+describe("look settings", () => {
+  it("keeps falling code between 0 and 60 percent", () => {
+    expect(_merge({ look: { accent: "#ff0000", terminalText: "#fff", rain: 500, effects: false } }).look.rain).toBe(60);
+    expect(_merge({}).look.effects).toBe(true);
+  });
+});

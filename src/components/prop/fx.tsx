@@ -1,18 +1,23 @@
 import { useEffect, useRef, useState } from "react";
+import { usePropStore } from "./store";
 
 const rand = (n: number) => Math.floor(Math.random() * n);
 const hex = (len = 4) => Array.from({ length: len }, () => rand(16).toString(16)).join("");
 const ip = () => `${rand(223) + 1}.${rand(255)}.${rand(255)}.${rand(254) + 1}`;
 
 /** Falling-code background drawn on a canvas. */
-export function CodeRain({ opacity = 0.18 }: { opacity?: number }) {
+export function CodeRain({ opacity }: { opacity?: number }) {
   const ref = useRef<HTMLCanvasElement>(null);
+  const { look } = usePropStore().config;
+  const amount = opacity ?? look.rain / 100;
+  const accent = look.accent;
   useEffect(() => {
+    if (!look.effects || amount <= 0) return;
     const c = ref.current;
     if (!c) return;
     const ctx = c.getContext("2d");
     if (!ctx) return;
-    const color = getComputedStyle(document.documentElement).getPropertyValue("--primary").trim() || "#9f6";
+    const color = getComputedStyle(document.documentElement).getPropertyValue("--primary").trim() || accent;
     let cols: number[] = [];
     const size = 14;
     const resize = () => {
@@ -34,8 +39,9 @@ export function CodeRain({ opacity = 0.18 }: { opacity?: number }) {
       });
     }, 55);
     return () => { clearInterval(t); window.removeEventListener("resize", resize); };
-  }, []);
-  return <canvas ref={ref} className="code-rain" style={{ opacity }} aria-hidden="true" />;
+  }, [accent, look.effects, amount]);
+  if (!look.effects || amount <= 0) return null;
+  return <canvas ref={ref} className="code-rain" style={{ opacity: amount }} aria-hidden="true" />;
 }
 
 const SCRIPT = [
