@@ -40,11 +40,14 @@ export type Tool = {
   mapX: number;
   mapY: number;
 };
-export type PropConfig = { appName: string; favicon: string | null; tools: Tool[] };
+export type LookConfig = { accent: string; terminalText: string; rain: number; effects: boolean };
+export const defaultLook: LookConfig = { accent: "#9be15d", terminalText: "#9aa3ad", rain: 18, effects: true };
+export type PropConfig = { appName: string; favicon: string | null; look: LookConfig; tools: Tool[] };
 
 export const defaultConfig: PropConfig = {
   appName: "Sentinel",
   favicon: null,
+  look: defaultLook,
   tools: [
     {
       id: "track",
@@ -162,7 +165,9 @@ export function mergeConfig(saved: Partial<PropConfig>): PropConfig {
     }),
     ...defaultConfig.tools.filter((toolConfig) => !savedTools.some((savedTool) => savedTool.id === toolConfig.id)),
   ];
-  return { ...defaultConfig, ...saved, tools };
+  const look = { ...defaultLook, ...(saved.look ?? {}) };
+  look.rain = Math.min(60, Math.max(0, Math.round(Number(look.rain) || 0)));
+  return { ...defaultConfig, ...saved, look, tools };
 }
 
 export function checkLogin(code: string) {

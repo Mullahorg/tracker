@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Shell } from "@/components/prop/shell";
 import { usePropStore } from "@/components/prop/store";
 import { ScenarioPanel } from "@/components/prop/scenario-panel";
-import { checkPin, MAX_DURATION_SECONDS, MIN_DURATION_SECONDS, parseRows, rowsToText, type Tool } from "@/lib/prop-store";
+import { defaultLook, checkPin, MAX_DURATION_SECONDS, MIN_DURATION_SECONDS, parseRows, rowsToText, type Tool } from "@/lib/prop-store";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -62,6 +62,8 @@ function Settings() {
 
   const setTool = (patch: Partial<Tool>) => update((c) => ({ ...c, tools: c.tools.map((t) => (t.id === tool.id ? { ...t, ...patch } : t)) }));
 
+  const setLook = (patch: Partial<typeof config.look>) => update((c) => ({ ...c, look: { ...c.look, ...patch } }));
+
   function onFavicon(file?: File) {
     if (!file) return;
     if (file.size > 300_000) { toast.error("Please use an image under 300 KB."); return; }
@@ -87,6 +89,17 @@ function Settings() {
             </div>
           </div>
         </div>
+      </section>
+
+      <section className="card">
+        <h2>Look and feel</h2>
+        <div className="form-grid">
+          <label className="field"><span>Accent colour</span><span className="color-row"><input type="color" value={config.look.accent} onChange={(e) => setLook({ accent: e.target.value })} /><code>{config.look.accent}</code></span></label>
+          <label className="field"><span>Terminal text colour</span><span className="color-row"><input type="color" value={config.look.terminalText} onChange={(e) => setLook({ terminalText: e.target.value })} /><code>{config.look.terminalText}</code></span></label>
+          <label className="field"><span>Falling code amount ({config.look.rain}%)</span><input type="range" min={0} max={60} value={config.look.rain} onChange={(e) => setLook({ rain: +e.target.value })} /></label>
+          <label className="field"><span>Moving effects</span><select value={config.look.effects ? "on" : "off"} onChange={(e) => setLook({ effects: e.target.value === "on" })}><option value="on">On</option><option value="off">Off</option></select></label>
+        </div>
+        <button className="btn ghost" onClick={() => update((c) => ({ ...c, look: defaultLook }))}>Reset look</button>
       </section>
 
       <section className="card">
