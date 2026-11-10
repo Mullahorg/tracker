@@ -46,8 +46,10 @@ export function PropStoreProvider({ children }: { children: ReactNode }) {
   return <StoreContext.Provider value={{ config, ready, update, reset }}>{children}</StoreContext.Provider>;
 }
 
+const fallback: Ctx = { config: defaultConfig, ready: false, update: () => {}, reset: () => {} };
+
 export function usePropStore() {
   const v = useContext(StoreContext);
-  if (!v) throw new Error("usePropStore outside provider");
-  return v;
+  // Falls back to defaults if rendered outside the provider (e.g. during a hot reload).
+  return v ?? fallback;
 }
