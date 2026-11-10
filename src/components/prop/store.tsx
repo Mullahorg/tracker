@@ -29,7 +29,7 @@ export function PropStoreProvider({ children }: { children: ReactNode }) {
     const root = document.documentElement;
     root.style.setProperty("--primary", config.look.accent);
     root.style.setProperty("--term-text", config.look.terminalText);
-    root.dataset.effects = config.look.effects ? "on" : "off";
+    root.dataset["effects"] = config.look.effects ? "on" : "off";
     let link = document.querySelector<HTMLLinkElement>("link[rel='icon']");
     if (!link) {
       link = document.createElement("link");
