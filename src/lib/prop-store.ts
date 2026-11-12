@@ -51,7 +51,11 @@ export type Tool = {
   sceneResults?: SceneResult[];
 };
 
-export type SceneResult = { id: string; name: string; result: ResultRow[] };
+export type SceneResult = {
+  id: string;   // match key (phone number or username)
+  name: string; // display name
+  result: ResultRow[];
+};
 
 export type LookConfig = {
   accent: string;
@@ -91,23 +95,47 @@ export const defaultConfig: PropConfig = {
         "Refining position",
         "Location locked",
       ],
+      // Fallback when nothing matches
       result: [
-        { label: "Name", value: "Daniel Okoro" },
-        { label: "Last seen", value: "Westlands, Nairobi" },
-        { label: "Coordinates", value: "-1.2676, 36.8108" },
-        { label: "Device", value: "Android · Pixel 7" },
-        { label: "Accuracy", value: "± 12 m" },
+        { label: "Status", value: "No active match" },
+        { label: "Message", value: "Identifier not found in current target set" },
       ],
+      // Three stored targets – match on the `id` field
       sceneResults: [
         {
-          id: "rehearsal-a",
-          name: "Rehearsal A",
+          id: "+254712345678",
+          name: "Daniel Okoro",
           result: [
             { label: "Name", value: "Daniel Okoro" },
             { label: "Last seen", value: "Westlands, Nairobi" },
             { label: "Coordinates", value: "-1.2676, 36.8108" },
             { label: "Device", value: "Android · Pixel 7" },
             { label: "Accuracy", value: "± 12 m" },
+            { label: "Carrier", value: "Safaricom" },
+          ],
+        },
+        {
+          id: "+254798765432",
+          name: "Amina Wanjiku",
+          result: [
+            { label: "Name", value: "Amina Wanjiku" },
+            { label: "Last seen", value: "Kilimani, Nairobi" },
+            { label: "Coordinates", value: "-1.2921, 36.7856" },
+            { label: "Device", value: "iPhone 14 Pro" },
+            { label: "Accuracy", value: "± 8 m" },
+            { label: "Carrier", value: "Airtel" },
+          ],
+        },
+        {
+          id: "@rook_ops",
+          name: "Rook",
+          result: [
+            { label: "Name", value: "Rook (alias)" },
+            { label: "Last seen", value: "Industrial Area, Nairobi" },
+            { label: "Coordinates", value: "-1.3089, 36.8412" },
+            { label: "Device", value: "Android · Samsung S23" },
+            { label: "Accuracy", value: "± 15 m" },
+            { label: "Carrier", value: "Telkom" },
           ],
         },
       ],
@@ -325,11 +353,28 @@ function tool(
   };
 }
 
+/** Legacy helper – still used in some places */
 export function getSceneResult(tool: Tool, sceneId: string): ResultRow[] {
   return (
     tool.sceneResults?.find((scene) => scene.id === sceneId)?.result ??
     tool.result
   );
+}
+
+/**
+ * Match against stored targets (used by Track).
+ * Looks for an exact match on the scene `id` (phone / username).
+ * Falls back to the tool’s default result when nothing matches.
+ */
+export function getMatchingResult(tool: Tool, input: string): ResultRow[] {
+  if (!tool.sceneResults?.length) return tool.result;
+
+  const normalized = input.trim().toLowerCase();
+  const match = tool.sceneResults.find(
+    (scene) => scene.id.toLowerCase() === normalized
+  );
+
+  return match?.result ?? tool.result;
 }
 
 /** Saved settings keep their edits, and any tools added later still appear. */
