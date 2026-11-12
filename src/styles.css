@@ -186,6 +186,11 @@ h2 { margin: 0 0 16px; font-size: 17px; font-weight: 600; }
 .admin { display: grid; gap: 20px; }
 .admin .page-head { margin: 0; }
 .admin > .btn { justify-self: start; }
+.scene-settings { display: grid; gap: 12px; padding-top: 16px; border-top: 1px solid var(--border); }
+.scene-settings-head, .scene-profile-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.scene-settings-head h3 { margin: 0 0 4px; font-size: 15px; }
+.scene-profile { display: grid; gap: 12px; padding-top: 14px; border-top: 1px solid var(--border); }
+.scene-profile-head strong { font-size: 14px; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .favicon-row { display: flex; align-items: center; gap: 10px; }
 .favicon-preview { display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid var(--border); border-radius: 10px; }

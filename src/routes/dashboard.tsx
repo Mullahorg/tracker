@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Crosshair, Bug, Wifi, FileLock2, ArrowLeft, Check, X, KeyRound, MessageSquare, Cctv, Cpu, Mail, Satellite } from "lucide-react";
 import { Shell } from "@/components/prop/shell";
 import { usePropStore } from "@/components/prop/store";
-import { resultViewForTool, type Tool } from "@/lib/prop-store";
+import { getSceneResult, resultViewForTool, type Tool } from "@/lib/prop-store";
 import { CodeRain, Glitch, HexStream, LiveTerminal, Meters, NetGraph, Radar } from "@/components/prop/fx";
 
 export const Route = createFileRoute("/dashboard")({
@@ -37,7 +37,7 @@ function Dashboard() {
   const { config } = usePropStore();
   const [active, setActive] = useState<Tool | null>(null);
 
-  if (active) return <Shell><Runner tool={active} onBack={() => setActive(null)} /></Shell>;
+  if (active) return <Shell><Runner key={active.id} tool={active} onBack={() => setActive(null)} /></Shell>;
 
   return (
     <Shell>
@@ -81,12 +81,17 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
     notes: "",
   });
   const [phase, setPhase] = useState<"input" | "running" | "done">("input");
+  const [sceneId, setSceneId] = useState(tool.sceneResults?.[0]?.id ?? "");
   const [step, setStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const [log, setLog] = useState<string[]>([]);
   const logRef = useRef<HTMLDivElement>(null);
 
-  const target = fields.target;
+  const selectedScene = tool.sceneResults?.find((scene) => scene.id === sceneId);
+  const target = tool.id === "track" ? selectedScene?.name ?? "" : fields.target;
+  const resultTool = tool.id === "track"
+    ? { ...tool, result: getSceneResult(tool, sceneId) }
+    : tool;
 
   useEffect(() => {
     if (phase !== "running") return;
@@ -125,15 +130,25 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
 
       {phase === "input" && (
         <form className="card narrow" onSubmit={(e) => { e.preventDefault(); setPhase("running"); }}>
-          <label className="field">
-            <span>{tool.inputLabel}</span>
-            <input
-              autoFocus
-              value={fields.target}
-              onChange={(e) => setFields((f) => ({ ...f, target: e.target.value }))}
-            />
-            <small className="hint">Primary target, host, account, or identifier for this run.</small>
-          </label>
+          {tool.id === "track" ? (
+            <label className="field">
+              <span>Scene</span>
+              <select autoFocus value={sceneId} onChange={(e) => setSceneId(e.target.value)}>
+                {(tool.sceneResults ?? []).map((scene) => <option key={scene.id} value={scene.id}>{scene.name || "Unnamed scene"}</option>)}
+              </select>
+              <small className="hint">Choose the admin-configured fictional result for this scene.</small>
+            </label>
+          ) : (
+            <label className="field">
+              <span>{tool.inputLabel}</span>
+              <input
+                autoFocus
+                value={fields.target}
+                onChange={(e) => setFields((f) => ({ ...f, target: e.target.value }))}
+              />
+              <small className="hint">Primary target, host, account, or identifier for this run.</small>
+            </label>
+          )}
 
           <label className="field">
             <span>Scope / selector</span>
@@ -162,7 +177,7 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
             <small className="hint">Optional context shown with the run record.</small>
           </label>
 
-          <button className="btn primary" disabled={!fields.target.trim()}>Start</button>
+          <button className="btn primary" disabled={tool.id === "track" ? !selectedScene : !fields.target.trim()}>Start</button>
         </form>
       )}
 
@@ -213,7 +228,7 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
               : <div className="failure"><X size={16} /> Operation failed</div>}
             <div className="row-between"><span className="muted">Target</span><b>{target}</b></div>
             {tool.outcome === "success"
-              ? <ResultDisplay tool={tool} />
+              ? <ResultDisplay tool={resultTool} />
               : <p className="muted">No result data was returned for this run.</p>}
             <button
               className="btn"

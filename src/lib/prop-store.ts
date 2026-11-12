@@ -39,7 +39,9 @@ export type Tool = {
   showMap: boolean;
   mapX: number;
   mapY: number;
+  sceneResults?: SceneResult[];
 };
+export type SceneResult = { id: string; name: string; result: ResultRow[] };
 export type LookConfig = { accent: string; terminalText: string; rain: number; effects: boolean };
 export const defaultLook: LookConfig = { accent: "#9be15d", terminalText: "#9aa3ad", rain: 18, effects: true };
 export type PropConfig = { appName: string; favicon: string | null; look: LookConfig; tools: Tool[] };
@@ -62,6 +64,17 @@ export const defaultConfig: PropConfig = {
         { label: "Device", value: "Android · Pixel 7" },
         { label: "Accuracy", value: "± 12 m" },
       ],
+      sceneResults: [{
+        id: "rehearsal-a",
+        name: "Rehearsal A",
+        result: [
+          { label: "Name", value: "Daniel Okoro" },
+          { label: "Last seen", value: "Westlands, Nairobi" },
+          { label: "Coordinates", value: "-1.2676, 36.8108" },
+          { label: "Device", value: "Android · Pixel 7" },
+          { label: "Accuracy", value: "± 12 m" },
+        ],
+      }],
       outcome: "success",
       durationSeconds: DEFAULT_DURATION_SECONDS,
       showMap: true,
@@ -146,6 +159,10 @@ function tool(id: string, name: string, blurb: string, inputLabel: string, steps
   return { id, name, blurb, inputLabel, steps, result, outcome: "success", durationSeconds: DEFAULT_DURATION_SECONDS, showMap, mapX: 50, mapY: 50 };
 }
 
+export function getSceneResult(tool: Tool, sceneId: string): ResultRow[] {
+  return tool.sceneResults?.find((scene) => scene.id === sceneId)?.result ?? tool.result;
+}
+
 /** Saved settings keep their edits, and any tools added later still appear. */
 export function mergeConfig(saved: Partial<PropConfig>): PropConfig {
   const savedTools = saved.tools ?? [];
@@ -154,6 +171,7 @@ export function mergeConfig(saved: Partial<PropConfig>): PropConfig {
       const defaults = defaultConfig.tools.find((toolConfig) => toolConfig.id === savedTool.id);
       const fallback = defaults ?? defaultConfig.tools[0];
       const duration = savedTool.durationSeconds;
+      const scenes = savedTool.sceneResults?.length ? savedTool.sceneResults : defaults?.sceneResults;
       return {
         ...(defaults ?? {}),
         ...savedTool,
@@ -161,6 +179,13 @@ export function mergeConfig(saved: Partial<PropConfig>): PropConfig {
         durationSeconds: typeof duration === "number" && Number.isFinite(duration)
           ? Math.min(MAX_DURATION_SECONDS, Math.max(MIN_DURATION_SECONDS, Math.round(duration)))
           : fallback?.durationSeconds ?? DEFAULT_DURATION_SECONDS,
+        ...(scenes ? {
+          sceneResults: scenes.map((scene, index) => ({
+            id: typeof scene.id === "string" && scene.id.trim() ? scene.id : `scene-${index + 1}`,
+            name: typeof scene.name === "string" && scene.name.trim() ? scene.name : `Scene ${index + 1}`,
+            result: Array.isArray(scene.result) ? scene.result : (defaults?.result ?? []),
+          })),
+        } : {}),
       };
     }),
     ...defaultConfig.tools.filter((toolConfig) => !savedTools.some((savedTool) => savedTool.id === toolConfig.id)),

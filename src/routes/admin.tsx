@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Shell } from "@/components/prop/shell";
 import { usePropStore } from "@/components/prop/store";
 import { ScenarioPanel } from "@/components/prop/scenario-panel";
-import { defaultLook, checkPin, MAX_DURATION_SECONDS, MIN_DURATION_SECONDS, parseRows, rowsToText, type Tool } from "@/lib/prop-store";
+import { defaultLook, checkPin, MAX_DURATION_SECONDS, MIN_DURATION_SECONDS, parseRows, rowsToText, type SceneResult, type Tool } from "@/lib/prop-store";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -65,6 +65,24 @@ function Settings() {
   if (!tool) return null;
 
   const setTool = (patch: Partial<Tool>) => update((c) => ({ ...c, tools: c.tools.map((t) => (t.id === tool.id ? { ...t, ...patch } : t)) }));
+  const sceneResults = tool.sceneResults ?? [];
+
+  const setScene = (id: string, patch: Partial<SceneResult>) => update((c) => ({
+    ...c,
+    tools: c.tools.map((item) => item.id === tool.id
+      ? { ...item, sceneResults: (item.sceneResults ?? []).map((scene) => scene.id === id ? { ...scene, ...patch } : scene) }
+      : item),
+  }));
+
+  const addScene = () => setTool({
+    sceneResults: [...sceneResults, {
+      id: globalThis.crypto.randomUUID(),
+      name: `Scene ${sceneResults.length + 1}`,
+      result: tool.result.map((row) => ({ ...row })),
+    }],
+  });
+
+  const removeScene = (id: string) => setTool({ sceneResults: sceneResults.filter((scene) => scene.id !== id) });
 
   const setLook = (patch: Partial<typeof config.look>) => update((c) => ({ ...c, look: { ...c.look, ...patch } }));
 
@@ -184,6 +202,33 @@ function Settings() {
             </label>
           </>}
         </div>
+        {tool.id === "track" && (
+          <div className="scene-settings">
+            <div className="scene-settings-head">
+              <div><h3>Scene results</h3><p className="muted">Each scene name selects its own fictional result.</p></div>
+              <button type="button" className="btn" onClick={addScene}>Add scene</button>
+            </div>
+            {sceneResults.map((scene) => (
+              <div className="scene-profile" key={scene.id}>
+                <div className="scene-profile-head">
+                  <strong>{scene.name || "Unnamed scene"}</strong>
+                  {sceneResults.length > 1 && <button type="button" className="btn ghost danger" onClick={() => removeScene(scene.id)} aria-label={`Remove ${scene.name || "scene"}`}>Remove</button>}
+                </div>
+                <div className="form-grid">
+                  <label className="field">
+                    <span>Scene name</span>
+                    <input value={scene.name} onChange={(e) => setScene(scene.id, { name: e.target.value })} placeholder="Rehearsal B" />
+                  </label>
+                  <label className="field">
+                    <span>Scene result (Label: value, one per line)</span>
+                    <textarea rows={6} key={scene.id} defaultValue={rowsToText(scene.result)} onBlur={(e) => setScene(scene.id, { result: parseRows(e.target.value) })} placeholder={"Name: Fictional character\nLast seen: Set location"} />
+                    <small className="hint">The result is chosen by scene name, not by a number entered during the run.</small>
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       <button className="btn ghost danger" onClick={() => { if (confirm("Reset all settings?")) { reset(); toast.success("Settings reset"); } }}>Reset to defaults</button>

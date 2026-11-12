@@ -15,9 +15,20 @@ describe("access codes", () => {
   });
 });
 
-import { mergeConfig as _merge, defaultConfig as _def, DEFAULT_DURATION_SECONDS } from "@/lib/prop-store";
+import { getSceneResult, mergeConfig as _merge, defaultConfig as _def, DEFAULT_DURATION_SECONDS } from "@/lib/prop-store";
 describe("tool list", () => {
   it("has 10 tools", () => expect(_def.tools).toHaveLength(10));
+  it("keeps separate tracking results selectable by scene name", () => {
+    const tracking = _def.tools.find((tool) => tool.id === "track");
+    if (!tracking) throw new Error("Expected the tracking tool");
+    const scenes = [
+      { id: "scene-a", name: "Scene A", result: [{ label: "Name", value: "Character A" }] },
+      { id: "scene-b", name: "Scene B", result: [{ label: "Name", value: "Character B" }] },
+    ];
+    const configured = { ...tracking, sceneResults: scenes };
+    expect(getSceneResult(configured, "scene-a")).toEqual(scenes[0]?.result);
+    expect(getSceneResult(configured, "scene-b")).toEqual(scenes[1]?.result);
+  });
   it("defaults every tool to a successful simulated result after eight seconds", () => {
     expect(_def.tools.every((tool) => tool.outcome === "success" && tool.durationSeconds === 8)).toBe(true);
     expect(DEFAULT_DURATION_SECONDS).toBe(8);
