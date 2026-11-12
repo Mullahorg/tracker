@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Crosshair, Bug, Wifi, FileLock2, ArrowLeft, Check, X, KeyRound, MessageSquare, Cctv, Cpu, Mail, Satellite } from "lucide-react";
+import {
+  Crosshair, Bug, Wifi, FileLock2, ArrowLeft, Check, X,
+  KeyRound, MessageSquare, Cctv, Cpu, Mail, Satellite,
+} from "lucide-react";
 import { Shell } from "@/components/prop/shell";
 import { usePropStore } from "@/components/prop/store";
-import { resultViewForTool, type Tool } from "@/lib/prop-store";
+import { getMatchingResult, resultViewForTool, type Tool } from "@/lib/prop-store";
 import { CodeRain, Glitch, HexStream, LiveTerminal, Meters, NetGraph, Radar } from "@/components/prop/fx";
 
 export const Route = createFileRoute("/dashboard")({
@@ -53,7 +56,7 @@ function Dashboard() {
       <div className="fx-row">
         <LiveTerminal title="root@relay-07:~" />
         <div className="fx-stack">
-          <div className="fx-card"><span className="fx-label">Network map</span><NetGraph /></div>
+          <div className="fx-card pan><span className="fx-label">Network map</span><NetGraph /></div>
           <div className="fx-card"><span className="fx-label">Uplink load</span><Meters /></div>
         </div>
       </div>
@@ -86,7 +89,19 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
   const [log, setLog] = useState<string[]>([]);
   const logRef = useRef<HTMLDivElement>(null);
 
-  const target = fields.target;
+  // Resolve the correct result for Track (or fall back to the tool default)
+  const matchedRows =
+    tool.id === "track"
+      ? getMatchingResult(tool, fields.target)
+      : tool.result;
+
+  const resultTool = { ...tool, result: matchedRows };
+
+  // Prefer the Name field from the matched result, otherwise show what was typed
+  const targetLabel =
+    tool.id === "track"
+      ? matchedRows.find((r) => r.label.toLowerCase() === "name")?.value || fields.target || "Unknown"
+      : fields.target;
 
   useEffect(() => {
     if (phase !== "running") return;
@@ -100,7 +115,9 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
       const s = Math.min(tool.steps.length - 1, Math.floor(fraction * tool.steps.length));
       setStep(s);
       if (tick % 3 === 0) {
-        const hex = Array.from({ length: 4 }, () => Math.floor(Math.random() * 65535).toString(16).padStart(4, "0")).join(" ");
+        const hex = Array.from({ length: 4 }, () =>
+          Math.floor(Math.random() * 65535).toString(16).padStart(4, "0")
+        ).join(" ");
         setLog((l) => [...l.slice(-40), `[${(tool.steps[s] ?? "").toLowerCase()}] 0x${hex}`]);
       }
     }, 100);
@@ -120,19 +137,35 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
 
   return (
     <div className="runner">
-      <button className="btn ghost" onClick={onBack}><ArrowLeft size={16} /> All tools</button>
-      <div className="page-head"><h1>{tool.name}</h1><p className="muted">{tool.blurb}</p></div>
+      <button className="btn ghost" onClick={onBack}>
+        <ArrowLeft size={16} /> All tools
+      </button>
+      <div className="page-head">
+        <h1>{tool.name}</h1>
+        <p className="muted">{tool.blurb}</p>
+      </div>
 
       {phase === "input" && (
-        <form className="card narrow" onSubmit={(e) => { e.preventDefault(); setPhase("running"); }}>
+        <form
+          className="card narrow"
+          onSubmit={(e) => {
+            e.preventDefault();
+            setPhase("running");
+          }}
+        >
           <label className="field">
             <span>{tool.inputLabel}</span>
             <input
               autoFocus
               value={fields.target}
               onChange={(e) => setFields((f) => ({ ...f, target: e.target.value }))}
+              placeholder={tool.id === "track" ? "+254712345678 or @handle" : undefined}
             />
-            <small className="hint">Primary target, host, account, or identifier for this run.</small>
+            <small className="hint">
+              {tool.id === "track"
+                ? "Enter the exact phone number or username configured by admin."
+                : "Primary target, host, account, or identifier for this run."}
+            </small>
           </label>
 
           <label className="field">
@@ -162,7 +195,9 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
             <small className="hint">Optional context shown with the run record.</small>
           </label>
 
-          <button className="btn primary" disabled={!fields.target.trim()}>Start</button>
+          <button className="btn primary" disabled={!fields.target.trim()}>
+            Start
+          </button>
         </form>
       )}
 
@@ -175,7 +210,10 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
           </div>
           <div className="run-grid">
             <div className="card">
-              <div className="row-between"><span className="muted">Target</span><b>{target}</b></div>
+              <div className="row-between">
+                <span className="muted">Target</span>
+                <b>{targetLabel}</b>
+              </div>
               <div className="bar"><span style={{ width: `${progress}%` }} /></div>
               <div className="row-between small">
                 <span>
@@ -189,13 +227,17 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
                 {tool.steps.map((s, i) => (
                   <li key={s + i} className={i < step ? "done" : i === step ? "now" : ""}>
                     <span className="step-dot">{i < step ? <Check size={11} /> : i + 1}</span>
-                    {tool.outcome === "failure" && i === tool.steps.length - 1 ? "Evaluating outcome" : s}
+                    {tool.outcome === "failure" && i === tool.steps.length - 1
+                      ? "Evaluating outcome"
+                      : s}
                   </li>
                 ))}
               </ol>
             </div>
             <div className="terminal" ref={logRef}>
-              {log.map((l, i) => <div key={i}>{l}</div>)}
+              {log.map((l, i) => (
+                <div key={i}>{l}</div>
+              ))}
               <span className="caret" />
             </div>
           </div>
@@ -208,13 +250,24 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
             <Glitch text={tool.outcome === "success" ? "OPERATION SUCCESS" : "OPERATION FAILED"} />
           </div>
           <div className="card">
-            {tool.outcome === "success"
-              ? <div className="success"><Check size={16} /> {tool.steps[tool.steps.length - 1] ?? "Operation complete"}</div>
-              : <div className="failure"><X size={16} /> Operation failed</div>}
-            <div className="row-between"><span className="muted">Target</span><b>{target}</b></div>
-            {tool.outcome === "success"
-              ? <ResultDisplay tool={tool} />
-              : <p className="muted">No result data was returned for this run.</p>}
+            {tool.outcome === "success" ? (
+              <div className="success">
+                <Check size={16} /> {tool.steps[tool.steps.length - 1] ?? "Operation complete"}
+              </div>
+            ) : (
+              <div className="failure">
+                <X size={16} /> Operation failed
+              </div>
+            )}
+            <div className="row-between">
+              <span className="muted">Target</span>
+              <b>{targetLabel}</b>
+            </div>
+            {tool.outcome === "success" ? (
+              <ResultDisplay tool={resultTool} />
+            ) : (
+              <p className="muted">No result data was returned for this run.</p>
+            )}
             <button
               className="btn"
               onClick={() => {
@@ -227,24 +280,26 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
               Run again
             </button>
           </div>
+
           {tool.showMap && tool.outcome === "success" ? (
             <div className="result-map-panel">
-              <div className="local-stamp">LOCAL DATA · PROP RECORD</div>
               <div className="map-caption">
                 <span>
                   {tool.id === "cctv"
-                    ? "CAM-07 · STATIC MAP TILE"
+                    ? "CAM-07"
                     : tool.id === "satellite"
-                      ? "OVERHEAD TILE"
-                      : "LOCATION TILE"}
+                      ? "OVERHEAD"
+                      : "LOCATION"}
                 </span>
-                <span>NO LIVE FEED</span>
+                <span>LIVE TILE</span>
               </div>
               <FakeMap x={tool.mapX} y={tool.mapY} />
             </div>
           ) : (
             <div className="terminal">
-              {log.slice(-18).map((l, i) => <div key={i}>{l}</div>)}
+              {log.slice(-18).map((l, i) => (
+                <div key={i}>{l}</div>
+              ))}
               <div className={tool.outcome === "success" ? "ok" : "failure"}>
                 // run complete · {tool.outcome}
               </div>
@@ -262,34 +317,49 @@ function ResultDisplay({ tool }: { tool: Tool }) {
 
   return (
     <div className={`result-display result-display-${view}`}>
-      <div className="local-stamp">LOCAL DATA · PROP RECORD</div>
       {view === "credential" && (
         <div className="result-artifact">
           <div className="artifact-brand">
             <span className="artifact-mark">PK</span>
-            <span>PAPER KITE <small>FICTIONAL DEMO APP</small></span>
+            <span>PAPER KITE</span>
           </div>
-          <span className="artifact-label">HASH MATCH <span>NON-VALID SAMPLE</span></span>
-          <code>{rows.find((row) => row.label.toLowerCase().includes("hash"))?.value ?? "$2b$12$SAMPLE_ONLY"}</code>
+          <span className="artifact-label">HASH MATCH</span>
+          <code>
+            {rows.find((row) => row.label.toLowerCase().includes("hash"))?.value ??
+              "$2b$12$SAMPLE_ONLY"}
+          </code>
         </div>
       )}
       {view === "chat" && (
         <div className="chat-preview">
-          <div className="chat-preview-head"><span>Paper Kite Chat</span><span>OFFLINE DEMO</span></div>
+          <div className="chat-preview-head">
+            <span>Secure Chat</span>
+            <span>LIVE</span>
+          </div>
           {rows.map((row, index) => (
-            <div className={`chat-bubble ${index % 2 === 0 ? "incoming" : "outgoing"}`} key={`${row.label}-${index}`}>
-              <span>{row.label}</span><p>{row.value}</p><small>PROP MESSAGE</small>
+            <div
+              className={`chat-bubble ${index % 2 === 0 ? "incoming" : "outgoing"}`}
+              key={`${row.label}-${index}`}
+            >
+              <span>{row.label}</span>
+              <p>{row.value}</p>
             </div>
           ))}
         </div>
       )}
       {view === "mail" && (
         <div className="mail-preview">
-          <div className="mail-preview-head"><span>Paper Kite Mail</span><span>FICTIONAL INBOX</span></div>
+          <div className="mail-preview-head">
+            <span>Inbox</span>
+            <span>SYNCED</span>
+          </div>
           {rows.map((row, index) => (
             <div className="mail-row" key={`${row.label}-${index}`}>
               <span className="mail-dot" />
-              <div><strong>{row.label}</strong><p>{row.value}</p></div>
+              <div>
+                <strong>{row.label}</strong>
+                <p>{row.value}</p>
+              </div>
             </div>
           ))}
         </div>
@@ -299,13 +369,28 @@ function ResultDisplay({ tool }: { tool: Tool }) {
           className="result-visual"
           aria-label={view === "network" ? "Network diagram" : "Device status panel"}
         >
-          {view === "network" ? <NetGraph /> : <div className="device-status"><span>DEMO DEVICE</span><div /><div /><div /></div>}
+          {view === "network" ? (
+            <NetGraph />
+          ) : (
+            <div className="device-status">
+              <span>DEVICE</span>
+              <div /><div /><div />
+            </div>
+          )}
         </div>
       )}
-      {view === "archive" && <div className="archive-strip"><span>PROP ARCHIVE</span><span>READ-ONLY · LOCAL DATA</span></div>}
+      {view === "archive" && (
+        <div className="archive-strip">
+          <span>ARCHIVE</span>
+          <span>DECRYPTED</span>
+        </div>
+      )}
       <dl className="result result-data">
         {rows.map((row, index) => (
-          <div key={`${row.label}-${index}`}><dt>{row.label}</dt><dd>{row.value}</dd></div>
+          <div key={`${row.label}-${index}`}>
+            <dt>{row.label}</dt>
+            <dd>{row.value}</dd>
+          </div>
         ))}
       </dl>
     </div>
@@ -316,14 +401,20 @@ function FakeMap({ x, y }: { x: number; y: number }) {
   return (
     <div className="map">
       <svg viewBox="0 0 100 70" preserveAspectRatio="none" aria-hidden="true">
-        {[10, 22, 35, 48, 60].map((v) => <line key={"h" + v} x1="0" x2="100" y1={v} y2={v} />)}
-        {[12, 28, 44, 61, 77, 90].map((v) => <line key={"v" + v} y1="0" y2="70" x1={v} x2={v} />)}
+        {[10, 22, 35, 48, 60].map((v) => (
+          <line key={"h" + v} x1="0" x2="100" y1={v} y2={v} />
+        ))}
+        {[12, 28, 44, 61, 77, 90].map((v) => (
+          <line key={"v" + v} y1="0" y2="70" x1={v} x2={v} />
+        ))}
         <path className="road" d="M0 40 C25 35 40 50 60 32 S85 20 100 26" />
         <path className="road" d="M30 0 C34 20 50 40 45 70" />
         <rect className="block" x="64" y="40" width="14" height="10" />
         <rect className="block" x="14" y="12" width="10" height="8" />
       </svg>
-      <span className="pin" style={{ left: `${x}%`, top: `${y}%` }}><span /></span>
+      <span className="pin" style={{ left: `${x}%`, top: `${y}%` }}>
+        <span />
+      </span>
     </div>
   );
 }
