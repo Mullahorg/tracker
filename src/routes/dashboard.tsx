@@ -1,19 +1,41 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  Crosshair, Bug, Wifi, FileLock2, ArrowLeft, Check, X,
-  KeyRound, MessageSquare, Cctv, Cpu, Mail, Satellite,
+  Crosshair,
+  Bug,
+  Wifi,
+  FileLock2,
+  ArrowLeft,
+  Check,
+  X,
+  KeyRound,
+  MessageSquare,
+  Cctv,
+  Cpu,
+  Mail,
+  Satellite,
 } from "lucide-react";
 import { Shell } from "@/components/prop/shell";
 import { usePropStore } from "@/components/prop/store";
 import { getMatchingResult, resultViewForTool, type Tool } from "@/lib/prop-store";
-import { CodeRain, Glitch, HexStream, LiveTerminal, Meters, NetGraph, Radar } from "@/components/prop/fx";
+import {
+  CodeRain,
+  Glitch,
+  HexStream,
+  LiveTerminal,
+  Meters,
+  NetGraph,
+  Radar,
+} from "@/components/prop/fx";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
     meta: [
       { title: "Tools · Sentinel" },
-      { name: "description", content: "Sentinel console tools: tracking, implant, breach and decrypt screens." },
+      {
+        name: "description",
+        content: "Sentinel console tools: tracking, implant, breach and decrypt screens.",
+      },
       { property: "og:title", content: "Tools · Sentinel" },
       { property: "og:description", content: "Sentinel console tools." },
       { property: "og:type", content: "website" },
@@ -40,7 +62,13 @@ function Dashboard() {
   const { config } = usePropStore();
   const [active, setActive] = useState<Tool | null>(null);
 
-  if (active) return <Shell><Runner tool={active} onBack={() => setActive(null)} /></Shell>;
+  if (active) {
+    return (
+      <Shell>
+        <Runner tool={active} onBack={() => setActive(null)} />
+      </Shell>
+    );
+  }
 
   return (
     <Shell>
@@ -48,24 +76,40 @@ function Dashboard() {
         <CodeRain />
         <div className="hero-copy">
           <span className="tag">● LINK SECURE · NODE {config.appName.toUpperCase()}</span>
-          <h1><Glitch text="Operations console" /></h1>
+          <h1>
+            <Glitch text="Operations console" />
+          </h1>
           <p className="muted">Choose an operation to start.</p>
         </div>
         <Radar />
       </div>
+
       <div className="fx-row">
         <LiveTerminal title="root@relay-07:~" />
         <div className="fx-stack">
-          <div className="fx-card pan><span className="fx-label">Network map</span><NetGraph /></div>
-          <div className="fx-card"><span className="fx-label">Uplink load</span><Meters /></div>
+          <div className="fx-card">
+            <span className="fx-label">Network map</span>
+            <NetGraph />
+          </div>
+          <div className="fx-card">
+            <span className="fx-label">Uplink load</span>
+            <Meters />
+          </div>
         </div>
       </div>
+
       <div className="tool-grid">
         {config.tools.map((tool) => {
           const Icon = icons[tool.id] ?? Crosshair;
           return (
-            <button key={tool.id} className="tool-card" onClick={() => setActive(tool)}>
-              <span className="tool-icon"><Icon size={20} /></span>
+            <button
+              key={tool.id}
+              className="tool-card"
+              onClick={() => setActive(tool)}
+            >
+              <span className="tool-icon">
+                <Icon size={20} />
+              </span>
               <strong>{tool.name}</strong>
               <span className="muted">{tool.blurb}</span>
             </button>
@@ -89,42 +133,55 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
   const [log, setLog] = useState<string[]>([]);
   const logRef = useRef<HTMLDivElement>(null);
 
-  // Resolve the correct result for Track (or fall back to the tool default)
+  // Resolve correct result for Track tool
   const matchedRows =
-    tool.id === "track"
-      ? getMatchingResult(tool, fields.target)
-      : tool.result;
+    tool.id === "track" ? getMatchingResult(tool, fields.target) : tool.result;
 
   const resultTool = { ...tool, result: matchedRows };
 
-  // Prefer the Name field from the matched result, otherwise show what was typed
   const targetLabel =
     tool.id === "track"
-      ? matchedRows.find((r) => r.label.toLowerCase() === "name")?.value || fields.target || "Unknown"
+      ? matchedRows.find((r) => r.label.toLowerCase() === "name")?.value ||
+        fields.target ||
+        "Unknown"
       : fields.target;
 
   useEffect(() => {
     if (phase !== "running") return;
+
     const durationMs = tool.durationSeconds * 1000;
     const startedAt = Date.now();
     let tick = 0;
+
     const t = setInterval(() => {
       tick++;
       const fraction = Math.min(1, (Date.now() - startedAt) / durationMs);
       setProgress(Math.min(99, Math.floor(fraction * 100)));
-      const s = Math.min(tool.steps.length - 1, Math.floor(fraction * tool.steps.length));
+
+      const s = Math.min(
+        tool.steps.length - 1,
+        Math.floor(fraction * tool.steps.length)
+      );
       setStep(s);
+
       if (tick % 3 === 0) {
         const hex = Array.from({ length: 4 }, () =>
-          Math.floor(Math.random() * 65535).toString(16).padStart(4, "0")
+          Math.floor(Math.random() * 65535)
+            .toString(16)
+            .padStart(4, "0")
         ).join(" ");
-        setLog((l) => [...l.slice(-40), `[${(tool.steps[s] ?? "").toLowerCase()}] 0x${hex}`]);
+        setLog((l) => [
+          ...l.slice(-40),
+          `[${(tool.steps[s] ?? "").toLowerCase()}] 0x${hex}`,
+        ]);
       }
     }, 100);
+
     const finish = setTimeout(() => {
       setProgress(100);
       setPhase("done");
     }, durationMs);
+
     return () => {
       clearInterval(t);
       clearTimeout(finish);
@@ -140,6 +197,7 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
       <button className="btn ghost" onClick={onBack}>
         <ArrowLeft size={16} /> All tools
       </button>
+
       <div className="page-head">
         <h1>{tool.name}</h1>
         <p className="muted">{tool.blurb}</p>
@@ -158,8 +216,12 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
             <input
               autoFocus
               value={fields.target}
-              onChange={(e) => setFields((f) => ({ ...f, target: e.target.value }))}
-              placeholder={tool.id === "track" ? "+254712345678 or @handle" : undefined}
+              onChange={(e) =>
+                setFields((f) => ({ ...f, target: e.target.value }))
+              }
+              placeholder={
+                tool.id === "track" ? "+254712345678 or @handle" : undefined
+              }
             />
             <small className="hint">
               {tool.id === "track"
@@ -172,27 +234,39 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
             <span>Scope / selector</span>
             <input
               value={fields.selector}
-              onChange={(e) => setFields((f) => ({ ...f, selector: e.target.value }))}
+              onChange={(e) =>
+                setFields((f) => ({ ...f, selector: e.target.value }))
+              }
             />
-            <small className="hint">Optional range, device ID, alias, or path to narrow the run.</small>
+            <small className="hint">
+              Optional range, device ID, alias, or path to narrow the run.
+            </small>
           </label>
 
           <label className="field">
             <span>Authorization reference</span>
             <input
               value={fields.reference}
-              onChange={(e) => setFields((f) => ({ ...f, reference: e.target.value }))}
+              onChange={(e) =>
+                setFields((f) => ({ ...f, reference: e.target.value }))
+              }
             />
-            <small className="hint">Ticket, work order, or approval ID for audit context.</small>
+            <small className="hint">
+              Ticket, work order, or approval ID for audit context.
+            </small>
           </label>
 
           <label className="field">
             <span>Operator notes</span>
             <input
               value={fields.notes}
-              onChange={(e) => setFields((f) => ({ ...f, notes: e.target.value }))}
+              onChange={(e) =>
+                setFields((f) => ({ ...f, notes: e.target.value }))
+              }
             />
-            <small className="hint">Optional context shown with the run record.</small>
+            <small className="hint">
+              Optional context shown with the run record.
+            </small>
           </label>
 
           <button className="btn primary" disabled={!fields.target.trim()}>
@@ -204,29 +278,46 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
       {phase === "running" && (
         <>
           <div className="fx-strip">
-            <div className="fx-card"><span className="fx-label">Packet capture</span><HexStream rows={6} /></div>
-            <div className="fx-card"><span className="fx-label">Route to target</span><NetGraph /></div>
-            <div className="fx-card radar-sm"><Radar /></div>
+            <div className="fx-card">
+              <span className="fx-label">Packet capture</span>
+              <HexStream rows={6} />
+            </div>
+            <div className="fx-card">
+              <span className="fx-label">Route to target</span>
+              <NetGraph />
+            </div>
+            <div className="fx-card radar-sm">
+              <Radar />
+            </div>
           </div>
+
           <div className="run-grid">
             <div className="card">
               <div className="row-between">
                 <span className="muted">Target</span>
                 <b>{targetLabel}</b>
               </div>
-              <div className="bar"><span style={{ width: `${progress}%` }} /></div>
+              <div className="bar">
+                <span style={{ width: `${progress}%` }} />
+              </div>
               <div className="row-between small">
                 <span>
                   {tool.outcome === "failure" && step === tool.steps.length - 1
                     ? "Evaluating outcome"
-                    : tool.steps[step]}…
+                    : tool.steps[step]}
+                  …
                 </span>
                 <span>{progress}%</span>
               </div>
               <ol className="steps">
                 {tool.steps.map((s, i) => (
-                  <li key={s + i} className={i < step ? "done" : i === step ? "now" : ""}>
-                    <span className="step-dot">{i < step ? <Check size={11} /> : i + 1}</span>
+                  <li
+                    key={s + i}
+                    className={i < step ? "done" : i === step ? "now" : ""}
+                  >
+                    <span className="step-dot">
+                      {i < step ? <Check size={11} /> : i + 1}
+                    </span>
                     {tool.outcome === "failure" && i === tool.steps.length - 1
                       ? "Evaluating outcome"
                       : s}
@@ -234,6 +325,7 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
                 ))}
               </ol>
             </div>
+
             <div className="terminal" ref={logRef}>
               {log.map((l, i) => (
                 <div key={i}>{l}</div>
@@ -246,28 +338,41 @@ function Runner({ tool, onBack }: { tool: Tool; onBack: () => void }) {
 
       {phase === "done" && (
         <div className="run-grid granted-wrap">
-          <div className={`granted ${tool.outcome === "failure" ? "failed" : ""}`}>
-            <Glitch text={tool.outcome === "success" ? "OPERATION SUCCESS" : "OPERATION FAILED"} />
+          <div
+            className={`granted ${tool.outcome === "failure" ? "failed" : ""}`}
+          >
+            <Glitch
+              text={
+                tool.outcome === "success"
+                  ? "OPERATION SUCCESS"
+                  : "OPERATION FAILED"
+              }
+            />
           </div>
+
           <div className="card">
             {tool.outcome === "success" ? (
               <div className="success">
-                <Check size={16} /> {tool.steps[tool.steps.length - 1] ?? "Operation complete"}
+                <Check size={16} />{" "}
+                {tool.steps[tool.steps.length - 1] ?? "Operation complete"}
               </div>
             ) : (
               <div className="failure">
                 <X size={16} /> Operation failed
               </div>
             )}
+
             <div className="row-between">
               <span className="muted">Target</span>
               <b>{targetLabel}</b>
             </div>
+
             {tool.outcome === "success" ? (
               <ResultDisplay tool={resultTool} />
             ) : (
               <p className="muted">No result data was returned for this run.</p>
             )}
+
             <button
               className="btn"
               onClick={() => {
@@ -325,11 +430,12 @@ function ResultDisplay({ tool }: { tool: Tool }) {
           </div>
           <span className="artifact-label">HASH MATCH</span>
           <code>
-            {rows.find((row) => row.label.toLowerCase().includes("hash"))?.value ??
-              "$2b$12$SAMPLE_ONLY"}
+            {rows.find((row) => row.label.toLowerCase().includes("hash"))
+              ?.value ?? "$2b$12$SAMPLE_ONLY"}
           </code>
         </div>
       )}
+
       {view === "chat" && (
         <div className="chat-preview">
           <div className="chat-preview-head">
@@ -347,6 +453,7 @@ function ResultDisplay({ tool }: { tool: Tool }) {
           ))}
         </div>
       )}
+
       {view === "mail" && (
         <div className="mail-preview">
           <div className="mail-preview-head">
@@ -364,27 +471,34 @@ function ResultDisplay({ tool }: { tool: Tool }) {
           ))}
         </div>
       )}
+
       {(view === "network" || view === "spyware") && (
         <div
           className="result-visual"
-          aria-label={view === "network" ? "Network diagram" : "Device status panel"}
+          aria-label={
+            view === "network" ? "Network diagram" : "Device status panel"
+          }
         >
           {view === "network" ? (
             <NetGraph />
           ) : (
             <div className="device-status">
               <span>DEVICE</span>
-              <div /><div /><div />
+              <div />
+              <div />
+              <div />
             </div>
           )}
         </div>
       )}
+
       {view === "archive" && (
         <div className="archive-strip">
           <span>ARCHIVE</span>
           <span>DECRYPTED</span>
         </div>
       )}
+
       <dl className="result result-data">
         {rows.map((row, index) => (
           <div key={`${row.label}-${index}`}>
