@@ -56,7 +56,7 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
   const router = useRouter();
   const timestamp = new Date().toISOString();
   const reference = `ERR-${timestamp.slice(0, 10).replace(/-/g, "")}-${Math.abs(
-    hashString(String(error?.message ?? "unknown")),
+    hashString(error instanceof Error ? error.message : String(error)),
   )
     .toString(16)
     .slice(0, 6)
